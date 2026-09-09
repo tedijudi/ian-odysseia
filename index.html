@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>ODYSSEIA: 이안의 서사시</title>
+<style>
+*{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
+body{
+  font-family:'Noto Sans KR', sans-serif; background:#0e1a2b; color:#fff;
+  display:flex; flex-direction:column; align-items:center; min-height:100vh; overflow:hidden;
+  touch-action:none; user-select:none;
+}
+.hidden{display:none !important;}
+.screen{width:100%; max-width:720px;}
+
+/* ===== 타이틀 ===== */
+#screen-title{
+  min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px;
+  background:radial-gradient(circle at 20% 10%, #2a1f4a, #16102b 60%, #0a0818 100%); color:#f0e6ff; position:relative; overflow:hidden;
+}
+.star{position:absolute; background:#fff; border-radius:50%; opacity:.6; animation:twinkle 3s ease-in-out infinite;}
+@keyframes twinkle{ 0%,100%{opacity:.2;} 50%{opacity:.9;} }
+.logo{font-size:12px; letter-spacing:5px; color:#d9a441; margin-bottom:10px; font-weight:700; z-index:2;}
+.title-main{font-size:30px; color:#f2c66d; text-align:center; margin-bottom:8px; font-weight:900; z-index:2; text-shadow:0 0 20px rgba(242,198,109,0.5);}
+.title-sub2{font-size:14px; color:#cbb8e8; margin-bottom:20px; z-index:2; letter-spacing:2px;}
+.sub{color:#b8a8d0; margin-bottom:24px; text-align:center; font-size:14px; z-index:2;}
+.btn{background:linear-gradient(120deg,#f2c66d,#d9a441); color:#3a2a10; border:none; padding:14px 32px; border-radius:999px; font-size:15px; font-weight:700; cursor:pointer; box-shadow:0 8px 20px rgba(217,164,65,0.4); z-index:2;}
+
+/* ===== 월드맵 ===== */
+#screen-map{
+  display:none; min-height:100vh; flex-direction:column; align-items:center; justify-content:center; padding:16px;
+  background:linear-gradient(180deg,#3a2a5a 0%,#5a4a7a 55%,#8a7aa8 100%); color:#fff; position:relative; overflow:hidden;
+}
+.map-header{text-align:center; margin-bottom:6px; z-index:5;}
+.map-header .logo{color:#f2c66d;}
+.map-header .title-main{color:#fff8e8; font-size:20px;}
+#worldMapArea{position:relative; width:100%; max-width:680px; height:min(60vh,420px); margin-top:6px;}
+.cloud{position:absolute; font-size:24px; opacity:.5; animation:drift 34s linear infinite;}
+@keyframes drift{ from{transform:translateX(-40px);} to{transform:translateX(calc(100vw));} }
+.deco{position:absolute; font-size:22px; opacity:.75; pointer-events:none;}
+.mapSvg{position:absolute; inset:0; width:100%; height:100%;}
+.mapSvg path{stroke:#f2c66d; stroke-width:2.5; fill:none; stroke-dasharray:7 7; opacity:.7; animation:dash 2s linear infinite;}
+@keyframes dash{ to{ stroke-dashoffset:-28; } }
+.node{ position:absolute; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center; cursor:pointer; z-index:6; }
+.node-circle{ width:62px; height:62px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:26px; background:radial-gradient(circle,#fff9e8,#f2c66d); border:3px solid #fff8e0; box-shadow:0 0 20px rgba(242,198,109,0.6); animation:nodePulse 2.4s ease-in-out infinite; }
+@keyframes nodePulse{ 0%,100%{transform:scale(1);} 50%{transform:scale(1.07);} }
+.node.soon .node-circle{ background:#5a5468; filter:grayscale(0.6); opacity:.6; animation:none; box-shadow:none; }
+.node-label{margin-top:5px; font-size:10.5px; font-weight:700; background:rgba(20,10,35,0.7); padding:3px 8px; border-radius:999px; color:#f2c66d; white-space:nowrap;}
+.toast{position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#2a1f4a; color:#f2c66d; padding:10px 20px; border-radius:999px; font-size:13px; z-index:400; opacity:0; transition:opacity .3s; border:1px solid #f2c66d;}
+
+/* ===== 게임 화면 공통 ===== */
+#screen-game{display:none; flex-direction:column; align-items:center; min-height:100vh; background:#0e1a2b; position:relative;}
+#backToMap{position:fixed; top:8px; left:8px; z-index:60; background:rgba(0,0,0,0.45); color:#fff; border:none; padding:6px 12px; border-radius:999px; font-size:11px;}
+#muteBtn{position:fixed; top:8px; right:8px; z-index:60; background:rgba(0,0,0,0.45); color:#fff; border:none; padding:6px 10px; border-radius:999px; font-size:13px;}
+
+#marioHud{ width:100%; max-width:720px; display:flex; justify-content:space-between; font-family:'Courier New',monospace; font-weight:700; font-size:13px; padding:8px 14px; background:#2a1030; color:#fff; letter-spacing:1px; z-index:20; }
+#marioHud .lightval{color:#ffe27a;}
+#nexusTop{ width:100%; max-width:720px; display:none; justify-content:space-between; align-items:center; padding:8px 44px 8px 46px; background:linear-gradient(180deg,#5a3d22,#3d2a17); border-bottom:3px solid #8a6238; z-index:20; font-size:12px; }
+#nexusTop .gauges{display:flex; gap:10px;}
+.gauge{display:flex; align-items:center; gap:4px;}
+.gauge .bar{width:58px; height:9px; background:#2a1d10; border-radius:3px; overflow:hidden; border:1px solid #8a6238;}
+.gauge .fill{height:100%; transition:width .3s ease;}
+.gauge.heart .fill{background:#ffb3d0;}
+.gauge.thrill .fill{background:#a8d8ff;}
+#gameWrap{position:relative; width:100%; max-width:720px; touch-action:none;}
+canvas{width:100%; display:block; background:#3a1030; image-rendering:pixelated;}
+#nexusLog{ display:none; width:100%; max-width:720px; background:linear-gradient(180deg,#2a3550,#1c2540); border-top:3px solid #8a6238; padding:8px 14px; font-size:12px; color:#cfe0ff; min-height:40px; z-index:20; }
+#actionBtn{ position:absolute; right:20px; bottom:96px; width:70px; height:70px; border-radius:50%; background:radial-gradient(circle,#ffe27a,#e0a93a); border:3px solid #fff; color:#3a2a10; font-weight:900; font-size:12px; display:none; align-items:center; justify-content:center; box-shadow:0 6px 16px rgba(0,0,0,0.4); z-index:15; cursor:pointer; text-align:center; line-height:1.2; animation:actionPulse 1s ease-in-out infinite; }
+@keyframes actionPulse{ 0%,100%{transform:scale(1);} 50%{transform:scale(1.08);} }
+#joyBase{ position:absolute; left:24px; bottom:24px; width:104px; height:104px; border-radius:50%; background:rgba(255,255,255,0.15); border:2px solid rgba(255,255,255,0.4); z-index:15; touch-action:none; }
+#joyKnob{ position:absolute; left:32px; top:32px; width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,0.65); pointer-events:none; }
+#jumpBtn{ position:absolute; right:24px; bottom:24px; width:78px; height:78px; border-radius:50%; background:radial-gradient(circle,#ff9ecb,#e0607a); border:3px solid #fff; color:#fff; font-weight:900; font-size:14px; display:flex; align-items:center; justify-content:center; z-index:15; box-shadow:0 6px 16px rgba(0,0,0,0.4); }
+
+/* ===== ⭐ JRPG풍 대화창 (참고 이미지 기반 재설계) ===== */
+#dialogueOverlay{ position:fixed; inset:0; background:rgba(0,0,0,0.35); display:none; align-items:flex-end; justify-content:center; z-index:100; }
+#dialogueStage{ width:100%; max-width:720px; position:relative; height:min(46vh,320px); display:flex; align-items:flex-end; }
+#portraitWrap{ position:absolute; left:0; bottom:0; width:42%; max-width:260px; height:100%; display:flex; align-items:flex-end; justify-content:center; pointer-events:none; z-index:2; }
+#portraitImg{ width:100%; height:auto; max-height:100%; object-fit:contain; filter:drop-shadow(0 10px 20px rgba(0,0,0,0.5)); animation:portraitIn .4s ease; }
+@keyframes portraitIn{ from{transform:translateY(30px); opacity:0;} to{transform:translateY(0); opacity:1;} }
+#dialogueBox{
+  position:relative; margin-left:34%; width:66%; margin-right:2%;
+  background:linear-gradient(160deg, rgba(20,25,50,0.92), rgba(10,14,32,0.94));
+  border:2px solid #b8c8e0; border-radius:10px; padding:16px 18px 18px;
+  box-shadow:0 0 0 1px rgba(255,255,255,0.1) inset, 0 10px 30px rgba(0,0,0,0.5);
+  margin-bottom:14px; z-index:3;
+}
+#dialogueBox::after{ content:'✦'; position:absolute; right:10px; bottom:8px; color:rgba(184,200,224,0.4); font-size:14px; }
+#speakerName{
+  display:inline-block; color:#ffe9b0; font-weight:700; font-size:14px; margin-bottom:8px;
+  padding-bottom:4px; border-bottom:1px solid rgba(255,233,176,0.3);
+}
+#speakerName::before{ content:'「 '; } #speakerName::after{ content:' 」'; }
+#dialogueText{ color:#f0eef8; font-size:14.5px; line-height:1.85; min-height:80px; white-space:pre-line; text-shadow:0 1px 3px rgba(0,0,0,0.6); cursor:pointer; }
+#dialogueText .em{ color:#ffd98a; font-weight:700; }
+#nextIndicator{ position:absolute; right:16px; bottom:8px; color:#ffe9b0; font-size:13px; animation:bounceArrow 1s ease-in-out infinite; }
+@keyframes bounceArrow{ 0%,100%{transform:translateY(0);} 50%{transform:translateY(4px);} }
+#dialogueBtn{ display:none; }
+
+/* ===== 챕터 인트로 카드 (뮤즈 서사시 스타일) ===== */
+#chapterIntro{ position:fixed; inset:0; background:#08061a; display:none; align-items:center; justify-content:center; flex-direction:column; z-index:500; padding:30px; text-align:center; }
+#chapterIntro .ci-ornament{font-size:20px; color:#f2c66d; opacity:0; animation:ciFade 3.2s ease forwards; margin-bottom:14px;}
+#chapterIntro .ci-num{font-size:12px; letter-spacing:6px; color:#cbb8e8; margin-bottom:10px; opacity:0; animation:ciFade 3.2s ease forwards;}
+#chapterIntro .ci-title{font-size:24px; color:#fff8e8; font-weight:900; opacity:0; animation:ciFade 3.2s ease .15s forwards;}
+#chapterIntro .ci-myth{font-size:13.5px; color:#d8c8f0; margin-top:16px; line-height:1.9; opacity:0; animation:ciFade 3.2s ease .3s forwards; max-width:480px;}
+@keyframes ciFade{ 0%{opacity:0; transform:translateY(10px);} 12%{opacity:1; transform:translateY(0);} 85%{opacity:1;} 100%{opacity:0;} }
+
+#birthFlash{ position:fixed; inset:0; background:#fff; opacity:0; pointer-events:none; z-index:300; transition:opacity 1s ease; }
+#birthText{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; flex-direction:column; background:radial-gradient(circle,#fff6e0,#f2c66d); z-index:250; text-align:center; padding:20px; }
+#birthText h1{ font-size:22px; color:#8a6fb0; margin-bottom:12px; }
+#birthText p{ color:#7a5f8a; margin-bottom:20px; font-size:13.5px; line-height:1.8; max-width:480px; }
+#birthText button{ padding:12px 28px; border-radius:999px; border:none; background:#8a6fb0; color:#fff; font-weight:700; }
+
+/* ===== 클리어 화면 ===== */
+#cardScreen{ position:fixed; inset:0; background:rgba(10,6,26,0.96); display:none; align-items:center; justify-content:center; flex-direction:column; z-index:200; text-align:center; padding:20px;}
+.stars{display:flex; gap:10px; margin-bottom:10px;}
+.stars span{font-size:30px; opacity:0; transform:scale(0); animation:starPop .5s ease forwards;}
+.stars span:nth-child(1){animation-delay:.2s;} .stars span:nth-child(2){animation-delay:.5s;} .stars span:nth-child(3){animation-delay:.8s;}
+@keyframes starPop{ to{opacity:1; transform:scale(1);} }
+.memory-card{ width:210px; height:290px; border-radius:18px; background:linear-gradient(160deg,#f2c66d,#8a6fb0); display:flex; flex-direction:column; align-items:center; justify-content:center; color:#fff; box-shadow:0 20px 40px rgba(0,0,0,0.5); margin-bottom:14px; animation:pop .6s ease 1.1s both; }
+@keyframes pop{from{transform:scale(.3); opacity:0;} to{transform:scale(1); opacity:1;}}
+.memory-card .icon{font-size:48px; margin-bottom:10px;}
+.memory-card .name{font-weight:700; font-size:16px;}
+.memory-card .epithet{font-size:11px; opacity:.85; margin-top:6px; padding:0 14px; text-align:center;}
+#cardScreen button{padding:11px 28px; border-radius:999px; border:none; background:#fff; color:#2b2a4a; font-weight:700; opacity:0; animation:ciFadeIn .5s ease 1.4s forwards;}
+@keyframes ciFadeIn{to{opacity:1;}}
+#cardScreen p.desc{opacity:0; animation:ciFadeIn .5s ease 1.3s forwards; margin-bottom:14px; color:#f2c66d; font-size:13px;}
+
+#missionList{ position:fixed; top:110px; left:50%; transform:translateX(-50%); max-width:700px; width:92%; z-index:10; display:none; gap:8px; flex-wrap:wrap; pointer-events:none;}
+.m-tag{padding:3px 9px; border-radius:999px; background:rgba(0,0,0,0.4); font-size:11px;}
+.m-tag.done{background:#7fd1b9; color:#1b1f4b; font-weight:700;}
+.snow{ position:absolute; top:-10px; width:5px; height:5px; background:#fff; border-radius:50%; opacity:.8; animation:fall linear infinite; }
+@keyframes fall{ to{ transform:translateY(400px); } }
+</style>
+</head>
+<body>
+
+<!-- ================= 타이틀 ================= -->
+<div class="screen" id="screen-title">
+  <div class="logo">✦ AN EPIC OF A SMALL HERO ✦</div>
+  <div class="title-main">ΟΔΥΣΣΕΙΑ ΤΟΥ ΙΑΝ</div>
+  <div class="title-sub2">오디세이아 · 이안의 서사시</div>
+  <p class="sub">뮤즈여, 노래하소서 — 작은 영웅의 여정을<br>D+<span id="dday"></span></p>
+  <button class="btn" onclick="enterMap()">📜 서사시를 펼치다</button>
+</div>
+
+<!-- ================= 월드맵 ================= -->
+<div class="screen" id="screen-map">
+  <div class="map-header">
+    <div class="logo">THE JOURNEY MAP</div>
+    <div class="title-main">여정의 지도</div>
+  </div>
+  <div id="worldMapArea"></div>
+</div>
+
+<!-- ================= 게임 화면 ================= -->
+<div class="screen" id="screen-game">
+  <button id="backToMap" onclick="backToMap()">← 지도</button>
+  <button id="muteBtn" onclick="toggleMute()">🔊</button>
+  <div id="marioHud">
+    <span>LIGHT<br><span class="lightval" id="lightScore">000</span></span>
+    <span>PROLOGUE<br><span id="worldLabel">태초의 바다</span></span>
+    <span>PROGRESS<br><span id="progressPct">0%</span></span>
+  </div>
+  <div id="nexusTop">
+    <div style="font-weight:700; color:#ffe9c0;" id="nexusTitle">🏥 이안이의 첫 순간들</div>
+    <div class="gauges">
+      <div class="gauge heart">🌸<div class="bar"><div class="fill" id="heartFill" style="width:30%"></div></div></div>
+      <div class="gauge thrill">✨<div class="bar"><div class="fill" id="thrillFill" style="width:20%"></div></div></div>
+    </div>
+  </div>
+  <div id="missionList"></div>
+  <div id="gameWrap">
+    <canvas id="game"></canvas>
+    <div id="actionBtn">❗<br>상호작용</div>
+    <div id="joyBase"><div id="joyKnob"></div></div>
+    <div id="jumpBtn">▲ 나아가기</div>
+  </div>
+  <div id="nexusLog"></div>
+</div>
+
+<!-- ================= JRPG 대화창 ================= -->
+<div id="dialogueOverlay">
+  <div id="dialogueStage">
+    <div id="portraitWrap"><img id="portraitImg" src="" alt=""></div>
+    <div id="dialogueBox">
+      <div id="speakerName"></div>
+      <div id="dialogueText"></div>
+      <div id="nextIndicator">▼</div>
+    </div>
+  </div>
+</div>
+
+<div id="chapterIntro">
+  <div class="ci-ornament">✦ ✧ ✦</div>
+  <div class="ci-num" id="ciNum"></div>
+  <div class="ci-title" id="ciTitle"></div>
+  <div class="ci-myth" id="ciMyth"></div>
+</div>
+
+<div id="birthFlash"></div>
+<div id="birthText">
+  <h1>✨ 생명의 여신이 문을 열다 ✨</h1>
+  <p>2026년 3월 11일, 오전 10시 15분.<br>3.36kg, 47.5cm — 작은 영웅이 마침내 인간의 세계에 첫발을 디뎠다.</p>
+  <button onclick="startBabyHospital()">이안이의 눈으로 세상 보기 →</button>
+</div>
+
+<div id="cardScreen">
+  <div class="stars"><span>⭐</span><span>⭐</span><span>⭐</span></div>
+  <div class="memory-card">
+    <div class="icon" id="cardIcon">👶</div>
+    <div class="name" id="cardName">탄생의 증표</div>
+    <div class="epithet" id="cardEpithet"></div>
+  </div>
+  <p class="desc" id="cardDesc">챕터 클리어! "메모리 카드"를 획득했습니다.</p>
+  <button onclick="closeCardScreen()">지도로 돌아가기</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   ✏️ CONFIG — 챕터/미션/대사/이미지 파일명은 여기서만 수정하세요
+   ============================================================ */
+
+/* 초상화 이미지: images/ 폴더 기준 경로 */
+const PORTRAITS = {
+  muse: { img:"images/muse.png", emoji:"🌟", name:"뮤즈" },
+  mom:  { img:"images/mom.png",  emoji:"👩", name:"어머니 · 데메테르의 축복을 받은 자" },
+  dad:  { img:"images/dad.png",  emoji:"🧑", name:"아버지 · 끈질긴 오디세우스" },
+  ian:  { img:"images/ian.png",  emoji:"👶", name:"이안 · 작은 영웅" }
+};
+
+const CHAPTERS = [
+  { id:1, title:"에로스의 화살", subtitle:"두 사람이 만나다", icon:"🏹", status:"playable", launch:"chapter1", pos:{x:12,y:80},
+    myth:"사랑의 신 에로스가 활시위를 당겼다.\n화살은 어김없이, 한 남자의 심장을 꿰뚫었다." },
+  { id:2, title:"모이라이의 실타래", subtitle:"찰떡이가 찾아오다", icon:"🧵", status:"soon", pos:{x:30,y:48} },
+  { id:3, title:"페르세포네의 항해", subtitle:"열 달의 여정", icon:"🌊", status:"soon", pos:{x:50,y:74} },
+  { id:4, title:"에일레이티이아의 문", subtitle:"탄생의 관문", icon:"🌅", status:"playable", launch:"birth", pos:{x:70,y:38},
+    myth:"출산의 여신 에일레이티이아가 손을 내밀었다.\n마침내, 문이 열릴 시간이었다." },
+  { id:5, title:"이타카의 아침", subtitle:"여정은 계속된다", icon:"🌱", status:"soon", pos:{x:88,y:62} }
+];
+const birthDate = "2026-03-11";
+const ASSETS = { chapter1Bg:"images/chapter1_bg.png", hospitalBg:"images/hospital_bg.png" };
+
+/* --- Chapter 1: 에로스의 화살 (회사 앞 → 족발집) --- */
+const TOPDOWN_LEVELS = {
+  chapter1: {
+    name:"회사 앞 · 운명의 골목", chIndex:"01", bgImage: ASSETS.chapter1Bg, characterType:"adult", theme:"street",
+    walls:[
+      {x1:6,y1:0,x2:6,y2:2},{x1:6,y1:5,x2:6,y2:7},
+      {x1:10,y1:0,x2:10,y2:2},{x1:10,y1:5,x2:10,y2:7}
+    ],
+    props:[
+      {x:1,y:3,icon:"🌳"},{x:5,y:0,icon:"🌳"},{x:11,y:0,icon:"🌳"},{x:15,y:3,icon:"🌳"},
+      {x:3,y:7,icon:"🏮"},{x:13,y:7,icon:"🏮"},{x:0,y:4.5,icon:"🚏"}
+    ],
+    start:{x:2,y:6},
+    missions:[
+      { id:1, x:2, y:1, icon:"🏹", speaker:"muse", label:"뮤즈의 노래",
+        text:"신들의 궁전 올림포스, 짓궂은 사랑의 신 《에로스》가 활시위를 당겼다.\n\n그 화살이 향한 곳은, 회사 식당에서 묵묵히 일하던 한 여인을 바라보던 어느 남자의 심장이었다.\n\n화살은 빗나가는 법이 없었다." },
+      { id:2, x:4, y:6, speaker:"dad", label:"운명에 사로잡힌 자",
+        text:"'심장이... 이상하다.'\n\n그는 그날 저녁, 마치 《오디세우스가 트로이의 목마를 설계하듯》 치밀한 작전을 세웠다.\n\n'오늘, 다 같이 족발이나 어때요?'\n\n너무나 자연스러운, 그러나 필사적인 첫 수였다." },
+      { id:3, x:8, y:6, speaker:"muse", label:"뮤즈의 노래",
+        text:"동료들 틈에 우연을 가장한 자리가 마련되었다.\n\n지혜의 여신 《아테나》조차 감탄할 만한 완벽한 위장이었으나, 정작 그의 심장은 전쟁터의 병사처럼 요동치고 있었다." },
+      { id:4, x:12, y:2, speaker:"dad", label:"포기를 모르는 사내",
+        text:"그날 이후, 그는 그녀를 향한 걸음을 멈추지 않았다.\n\n마치 《페넬로페를 향해 10년을 항해한 오디세우스》처럼 — 그의 사랑은 끈질겼고, 흔들림이 없었다." },
+      { id:5, x:14, y:6, speaker:"muse", label:"운명이 맺어지다",
+        text:"2018년 4월 13일.\n\n모이라이 세 여신 중 《클로토》가 새로운 실 하나를 자아냈다.\n두 개의 운명이, 마침내 하나로 엮이기 시작한 순간이었다.\n\n이렇게, 두 사람의 오디세이아가 시작되었다." }
+    ],
+    cardReward:{ icon:"🏹", name:"에로스의 화살", epithet:"운명이 시작된 순간의 증표" }
+  }
+};
+
+/* --- Chapter 4: 에일레이티이아의 문 (자궁 속 + 병원, 이안이 시점) --- */
+const PLATFORMER = {
+  length: 2600, groundY: 300,
+  enemies: [
+    { x:420, range:60, alive:true }, { x:800, range:50, alive:true },
+    { x:1250, range:70, alive:true }, { x:1700, range:60, alive:true }, { x:2100, range:50, alive:true }
+  ],
+  blocks: [
+    { x:300, msg:"어머니의 심장 소리, 태초의 북소리처럼 늘 함께했다.", used:false },
+    { x:650, msg:"아버지의 목소리가 물결 너머로 다정하게 들려왔다.", used:false },
+    { x:1050, msg:"'찰떡이'라 불리며, 이미 사랑받고 있었다.", used:false },
+    { x:1500, msg:"평온한 열 달 — 폭풍 없는 항해였다.", used:false },
+    { x:1950, msg:"머나먼 땅, 후쿠오카의 파도가 함께 흔들렸다.", used:false },
+    { x:2350, msg:"드디어, 태초의 바다를 벗어날 시간이다.", used:false }
+  ]
+};
+TOPDOWN_LEVELS.hospital = {
+  name:"에일레이티이아의 신전 · 안산우성여성병원", chIndex:"04", bgImage: ASSETS.hospitalBg, characterType:"baby", theme:"indoor",
+  walls:[
+    {x1:6,y1:0,x2:6,y2:2},{x1:6,y1:5,x2:6,y2:7},
+    {x1:9,y1:0,x2:9,y2:2},{x1:9,y1:5,x2:9,y2:7},
+    {x1:9,y1:4,x2:10,y2:4},{x1:13,y1:4,x2:15,y2:4}
+  ],
+  props:[
+    {x:1,y:0.3,icon:"🪴"},{x:15,y:0.3,icon:"🪴"},{x:1,y:7.5,icon:"🛋️"},{x:7,y:2.3,icon:"🖼️"},{x:12,y:7.5,icon:"🧸"}
+  ],
+  start:{x:2,y:6},
+  missions:[
+    { id:1, x:2, y:1, speaker:"ian", label:"흐릿한 첫 빛",
+      text:"눈을 뜨자, 세계는 온통 눈부신 빛의 소용돌이였다.\n\n낯선 온도, 낯선 공기 — 그러나 두렵지 않았다.\n어디선가, 태초부터 알고 있던 두 목소리가 떨리며 들려왔기 때문이다." },
+    { id:2, x:7, y:6, speaker:"mom", label:"들려오는 심장 소리",
+      text:"'우리 아가...'\n\n나는 조심스레 그를 품에 안았다.\n열 달 내내 들려주었던 그 심장 소리를, 이제는 내 품 안에서 직접 들려줄 차례였다." },
+    { id:3, x:12, y:1, speaker:"muse", label:"세상의 첫 빛",
+      text:"오전 10시 15분.\n\n출산의 여신 《에일레이티이아》가 마침내 문을 활짝 열었다.\n3.36kg, 47.5cm — 작은 영웅이 인간 세계에 첫발을 내디뎠다.\n\n그의 첫 울음은 두려움이 아닌, 《존재의 선언》이었다." },
+    { id:4, x:12, y:5, speaker:"dad", label:"처음 안아본 순간",
+      text:"손끝이 떨렸다.\n\n세상의 그 어떤 트로피도, 그 어떤 승리도 — 이 작은 무게보다 무겁지 않았다.\n\n'세상을 다 가진 기분이란 게, 이런 거구나.'" },
+    { id:5, x:14, y:6, speaker:"muse", label:"이름을 얻는 신탁",
+      text:"두 사람이 아이를 내려다보며 속삭였다.\n\n'이안아.'\n\n《기쁘고 평안하라》는 뜻을 담은 이름 — 신탁처럼 내려진 그 이름과 함께, 작은 영웅은 세상에서 유일한 존재가 되었다." }
+  ],
+  cardReward:{ icon:"👶", name:"탄생의 증표", epithet:"에일레이티이아의 문을 통과한 자" }
+};
+/* ============================================================
+   ✏️ CONFIG 끝. 아래는 게임 엔진입니다.
+   ============================================================ */
+
+document.getElementById('dday').textContent = (()=>{ const d=Math.floor((new Date()-new Date(birthDate))/86400000); return d>=0?d:0; })();
+
+/* 타이틀 배경 별 */
+(function initStars(){
+  const scr = document.getElementById('screen-title');
+  for(let i=0;i<40;i++){
+    const s=document.createElement('div'); s.className='star';
+    const size=1+Math.random()*2;
+    s.style.width=size+'px'; s.style.height=size+'px';
+    s.style.left=Math.random()*100+'%'; s.style.top=Math.random()*100+'%';
+    s.style.animationDelay=(Math.random()*3)+'s';
+    scr.appendChild(s);
+  }
+})();
+
+/* ---------------- 사운드 (Web Audio 합성) ---------------- */
+let audioCtx=null, soundOn=true;
+function ensureAudio(){ if(!audioCtx){ try{ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } }
+function beep(freq=440, dur=0.1, type='sine', vol=0.2, delay=0){
+  if(!soundOn) return; ensureAudio(); if(!audioCtx) return;
+  const t0 = audioCtx.currentTime+delay;
+  const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+  o.type=type; o.frequency.value=freq; g.gain.value=vol;
+  o.connect(g); g.connect(audioCtx.destination);
+  o.start(t0); g.gain.exponentialRampToValueAtTime(0.001, t0+dur); o.stop(t0+dur);
+}
+function sfxJump(){ beep(620,0.12,'square',0.15); }
+function sfxCollect(){ beep(880,0.08,'triangle',0.22); beep(1300,0.1,'triangle',0.16,0.08); }
+function sfxInteract(){ beep(520,0.09,'sine',0.15); }
+function sfxClear(){ [523,659,784,1046].forEach((f,i)=> beep(f,0.16,'triangle',0.2,i*0.13)); }
+function sfxStep(){ beep(220+Math.random()*30,0.03,'square',0.045); }
+function sfxHit(){ beep(160,0.15,'sawtooth',0.12); }
+function sfxType(){ beep(1000+Math.random()*200,0.02,'square',0.03); }
+function toggleMute(){ soundOn=!soundOn; document.getElementById('muteBtn').textContent = soundOn?'🔊':'🔇'; if(soundOn) beep(660,0.08,'sine',0.15); }
+
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.style.opacity=1; setTimeout(()=>t.style.opacity=0, 1800); }
+
+/* ---------------- 화면 전환 ---------------- */
+function enterMap(){ ensureAudio(); document.getElementById('screen-title').style.display='none'; document.getElementById('screen-map').style.display='flex'; renderWorldMap(); }
+function backToMap(){ document.getElementById('screen-game').style.display='none'; document.getElementById('screen-map').style.display='flex'; }
+
+function renderWorldMap(){
+  const area = document.getElementById('worldMapArea');
+  area.innerHTML = '';
+  for(let i=0;i<4;i++){
+    const c=document.createElement('div'); c.className='cloud'; c.textContent='☁️';
+    c.style.top=(6+i*10)+'%'; c.style.left=(-10+i*8)+'%'; c.style.animationDelay=(i*4)+'s'; c.style.animationDuration=(26+i*6)+'s';
+    area.appendChild(c);
+  }
+  ['🏛️','⛰️','🌊','🏡'].forEach((emo,i)=>{
+    const d=document.createElement('div'); d.className='deco'; d.textContent=emo;
+    d.style.left=(5+i*28)+'%'; d.style.top=(90-i*4)+'%';
+    area.appendChild(d);
+  });
+  const svgNS='http://www.w3.org/2000/svg';
+  const svg=document.createElementNS(svgNS,'svg'); svg.setAttribute('class','mapSvg'); svg.setAttribute('viewBox','0 0 100 100'); svg.setAttribute('preserveAspectRatio','none');
+  const path=document.createElementNS(svgNS,'path');
+  path.setAttribute('d', 'M '+CHAPTERS.map(c=>`${c.pos.x} ${c.pos.y}`).join(' L '));
+  svg.appendChild(path); area.appendChild(svg);
+  CHAPTERS.forEach((ch,i)=>{
+    const node=document.createElement('div'); node.className='node'+(ch.status==='soon'?' soon':'');
+    node.style.left=ch.pos.x+'%'; node.style.top=ch.pos.y+'%';
+    node.innerHTML = `<div class="node-circle">${ch.icon}</div><div class="node-label">${String(i+1).padStart(2,'0')} · ${ch.title}</div>`;
+    node.onclick = ()=>{
+      if(ch.status==='soon'){ beep(300,0.1,'sine',0.12); toast('✨ 다음 서사시는 곧 노래됩니다'); return; }
+      beep(700,0.1,'sine',0.15);
+      launchChapter(ch);
+    };
+    area.appendChild(node);
+  });
+}
+
+function launchChapter(ch){
+  document.getElementById('screen-map').style.display='none';
+  document.getElementById('screen-game').style.display='flex';
+  showChapterIntro(ch.id, ch.title, ch.myth || ch.subtitle, ()=>{
+    if(ch.launch==='birth'){ startBirthIntro(); }
+    else { startTopdown(ch.launch); }
+  });
+}
+function showChapterIntro(num, title, myth, cb){
+  const el = document.getElementById('chapterIntro');
+  document.getElementById('ciNum').textContent = 'CHAPTER '+String(num).padStart(2,'0');
+  document.getElementById('ciTitle').textContent = title;
+  document.getElementById('ciMyth').textContent = myth;
+  el.style.display='flex';
+  setTimeout(()=>{ el.style.display='none'; cb(); }, 3300);
+}
+
+/* ---------------- 캔버스 & 전역 ---------------- */
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+let mode=null, globalT=0;
+
+/* ---------------- ⭐ JRPG 대화 시스템 ---------------- */
+let typeInterval=null, typeFullText='', dialogueQueue=[], dialogueOnComplete=null;
+
+function showDialogue(missionOrList, onComplete){
+  dialogueQueue = Array.isArray(missionOrList) ? [...missionOrList] : [missionOrList];
+  dialogueOnComplete = onComplete;
+  document.getElementById('dialogueOverlay').style.display='flex';
+  playNextDialogue();
+}
+function playNextDialogue(){
+  if(dialogueQueue.length===0){
+    document.getElementById('dialogueOverlay').style.display='none';
+    if(dialogueOnComplete) dialogueOnComplete();
+    return;
+  }
+  const line = dialogueQueue.shift();
+  const p = PORTRAITS[line.speaker] || PORTRAITS.muse;
+  document.getElementById('speakerName').textContent = line.label ? (p.name.split(' · ')[0] + ' — ' + line.label) : p.name;
+  const img = document.getElementById('portraitImg');
+  if(p.img){ img.src = p.img; img.style.display='block'; img.onerror=()=>{ img.style.display='none'; }; }
+  else { img.style.display='none'; }
+  document.getElementById('portraitWrap').dataset.emoji = p.emoji;
+  typewriterText(line.text.replace(/《([^》]+)》/g,'<span class="em">$1</span>'));
+}
+function typewriterText(html, speed=22){
+  const el = document.getElementById('dialogueText');
+  clearInterval(typeInterval); el.innerHTML=''; typeFullText=html;
+  const plain = html.replace(/<[^>]+>/g,'');
+  let i=0;
+  el.innerHTML='';
+  const raw = html;
+  typeInterval = setInterval(()=>{
+    el.textContent = plain.slice(0, i+1);
+    if(i%3===0) sfxType();
+    i++;
+    if(i>=plain.length){
+      clearInterval(typeInterval);
+      el.innerHTML = raw;
+    }
+  }, speed);
+}
+document.getElementById('dialogueBox').addEventListener('click', ()=>{
+  if(typeInterval){ clearInterval(typeInterval); document.getElementById('dialogueText').innerHTML = typeFullText; }
+  else { playNextDialogue(); }
+});
+
+/* ---------------- 캐릭터 드로잉 (그림자 없음, 방향/눈깜빡임/숨쉬기 포함) ---------------- */
+function drawWalkerSide(cx, cy, moving, jumping, t, facingRight){
+  const legSwing = moving ? Math.sin(t*0.35)*10 : 0;
+  const blink = (Math.floor(t/40)%9===0);
+  ctx.save(); ctx.translate(cx, cy); if(!facingRight) ctx.scale(-1,1);
+  ctx.fillStyle = '#f4c9a0';
+  if(jumping){ ctx.fillRect(-9, 6, 7, 10); ctx.fillRect(2, 6, 7, 10); }
+  else { ctx.fillRect(-9+legSwing*0.3, 8, 7, 12+Math.abs(legSwing)*0.3); ctx.fillRect(2-legSwing*0.3, 8, 7, 12-Math.abs(legSwing)*0.3); }
+  ctx.fillStyle = '#ffd9e6'; ctx.beginPath(); ctx.ellipse(0, 0, 15, 16, 0, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#ffe3c4'; ctx.beginPath(); ctx.arc(0, -20, 13, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle='#ff9ecb'; ctx.beginPath(); ctx.arc(6,-17,2.5,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#4a3f55';
+  if(blink){ ctx.fillRect(2.5,-21.3,3,1); ctx.fillRect(-5.5,-21.3,3,1); }
+  else { ctx.beginPath(); ctx.arc(4,-21,1.6,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(-3,-21,1.6,0,Math.PI*2); ctx.fill(); }
+  ctx.restore();
+}
+function drawWalkerTop(cx, cy, moving, t, dir){
+  const legSwing = moving ? Math.sin(t*0.3)*7 : 0;
+  const bob = moving ? Math.abs(Math.sin(t*0.3))*2 : Math.sin(t*0.05)*1;
+  const blink = (Math.floor(t/45)%8===0);
+  ctx.save(); ctx.translate(cx, cy - bob);
+  if(dir==='left') ctx.scale(-1,1);
+  ctx.fillStyle = '#5a4a7a'; ctx.fillRect(-8+legSwing*0.4, 8, 6, 12); ctx.fillRect(2-legSwing*0.4, 8, 6, 12);
+  ctx.fillStyle = '#f4c9a0'; ctx.fillRect(-14-legSwing*0.2, -2, 5, 12); ctx.fillRect(9+legSwing*0.2, -2, 5, 12);
+  ctx.fillStyle = '#8a6fb0'; ctx.beginPath(); ctx.roundRect(-11, -8, 22, 20, 6); ctx.fill();
+  ctx.fillStyle = '#ffe3c4'; ctx.beginPath(); ctx.arc(0, -18, 11, 0, Math.PI*2); ctx.fill();
+  if(dir==='up'){
+    ctx.fillStyle='#3a2a20'; ctx.beginPath(); ctx.arc(0,-18,11,0,Math.PI*2); ctx.fill();
+  } else {
+    ctx.fillStyle='#3a2a20'; ctx.beginPath(); ctx.arc(0,-24,9,Math.PI,0); ctx.fill();
+    ctx.fillStyle='#4a3f55';
+    if(blink){ ctx.fillRect(2,-18.5,3,1); ctx.fillRect(-5,-18.5,3,1); }
+    else { ctx.beginPath(); ctx.arc(4,-18,1.5,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(-4,-18,1.5,0,Math.PI*2); ctx.fill(); }
+  }
+  ctx.restore();
+}
+function drawBabyFloat(cx, cy, moving, t){
+  const bob = Math.sin(t*0.08)*4;
+  const wiggle = moving ? Math.sin(t*0.3)*6 : 0;
+  const blink = (Math.floor(t/50)%7===0);
+  ctx.save(); ctx.translate(cx, cy + bob);
+  const glow = ctx.createRadialGradient(0,0,4, 0,0,26);
+  glow.addColorStop(0,'rgba(255,240,200,0.55)'); glow.addColorStop(1,'rgba(255,240,200,0)');
+  ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(0,0,26,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#fff2e0'; ctx.beginPath(); ctx.ellipse(0, 6, 13, 15, 0, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle='#f2c66d'; ctx.lineWidth=1.5; ctx.stroke();
+  ctx.fillStyle = '#ffe3c4'; ctx.beginPath(); ctx.arc(-11+wiggle*0.3, 2, 4, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(11-wiggle*0.3, 2, 4, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#ffe3c4'; ctx.beginPath(); ctx.arc(0, -14, 12, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle='#ff9ecb'; ctx.beginPath(); ctx.arc(6,-11,2.2,0,Math.PI*2); ctx.arc(-6,-11,2.2,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='#4a3f55'; ctx.lineWidth=1.6; ctx.lineCap='round';
+  if(blink){ ctx.beginPath(); ctx.moveTo(2,-15); ctx.lineTo(5,-15); ctx.stroke(); ctx.beginPath(); ctx.moveTo(-5,-15); ctx.lineTo(-2,-15); ctx.stroke(); }
+  else { ctx.beginPath(); ctx.arc(3.5,-15,2.2,0.2,Math.PI-0.2); ctx.stroke(); ctx.beginPath(); ctx.arc(-3.5,-15,2.2,0.2,Math.PI-0.2); ctx.stroke(); }
+  ctx.restore();
+}
+
+/* ---------------- 발밑 먼지 파티클 ---------------- */
+let dust=[];
+function spawnDust(x,y){ dust.push({x,y,life:18,r:3+Math.random()*2}); }
+function updateDust(){ dust.forEach(d=>{d.life--; d.y-=0.3;}); dust=dust.filter(d=>d.life>0); }
+function drawDust(camX=0){ dust.forEach(d=>{ ctx.beginPath(); ctx.arc(d.x-camX,d.y,d.r,0,Math.PI*2); ctx.fillStyle='rgba(255,255,255,'+(d.life/18*0.4)+')'; ctx.fill(); }); }
+
+/* =========================================================
+   PLATFORMER (자궁 속 = 태초의 바다) — Chapter 4 전용 인트로
+   ========================================================= */
+const GRAVITY=0.7, JUMP_FORCE=-13, MOVE_SPEED=3.2;
+let pf, inputLeft=false, inputRight=false, jumpQueued=false, particles=[], bubbles=[];
+
+function startBirthIntro(){
+  mode='platform';
+  document.getElementById('marioHud').style.display='flex';
+  document.getElementById('nexusTop').style.display='none';
+  document.getElementById('nexusLog').style.display='none';
+  document.getElementById('missionList').style.display='none';
+  document.getElementById('jumpBtn').style.display='flex';
+  document.getElementById('joyBase').style.display='block';
+  document.getElementById('actionBtn').style.display='none';
+  canvas.width=720; canvas.height=360;
+  pf = { worldX:60, y:PLATFORMER.groundY, vy:0, vx:0, grounded:true, facingRight:true, t:0, lightScore:0 };
+  particles=[]; dust=[]; PLATFORMER.blocks.forEach(b=>b.used=false); PLATFORMER.enemies.forEach(e=>e.alive=true);
+  bubbles = Array.from({length:18}, ()=>({ x:Math.random()*720, y:Math.random()*360, r:2+Math.random()*4, speed:0.3+Math.random()*0.6 }));
+  document.getElementById('lightScore').textContent='000';
+}
+function pfUpdate(){
+  pf.t++; globalT++;
+  pf.vx = 0;
+  if(inputLeft){ pf.vx=-MOVE_SPEED; pf.facingRight=false; }
+  if(inputRight){ pf.vx=MOVE_SPEED; pf.facingRight=true; }
+  pf.worldX += pf.vx; pf.worldX = Math.max(20, pf.worldX);
+  if(pf.vx!==0 && pf.grounded && pf.t%10===0){ spawnDust(pf.worldX, pf.y+18); sfxStep(); }
+  if(jumpQueued && pf.grounded){ pf.vy=JUMP_FORCE; pf.grounded=false; sfxJump(); }
+  jumpQueued=false;
+  pf.vy += GRAVITY; pf.y += pf.vy;
+  if(pf.y >= PLATFORMER.groundY){ pf.y=PLATFORMER.groundY; pf.vy=0; pf.grounded=true; }
+
+  PLATFORMER.blocks.forEach(b=>{
+    if(b.used) return;
+    const blockY = PLATFORMER.groundY-130;
+    if(Math.abs(pf.worldX-b.x)<24 && pf.vy<0 && Math.abs((pf.y-24)-blockY)<16){
+      b.used=true; pf.vy=2; pf.lightScore++;
+      document.getElementById('lightScore').textContent = String(pf.lightScore).padStart(3,'0');
+      spawnFloatMsg(b.msg); sfxCollect();
+      for(let i=0;i<6;i++) particles.push({x:b.x,y:blockY,vx:(Math.random()-0.5)*4,vy:-4-Math.random()*2,life:30});
+    }
+  });
+  PLATFORMER.enemies.forEach(e=>{
+    if(!e.alive) return;
+    e.curX = e.x + Math.sin(pf.t*0.02+e.x)*e.range;
+    const dx = pf.worldX-e.curX;
+    if(Math.abs(dx)<20){
+      const playerBottom=pf.y+16, enemyTop=PLATFORMER.groundY+8;
+      if(pf.vy>0 && playerBottom-pf.vy<=enemyTop+4){
+        e.alive=false; pf.vy=JUMP_FORCE*0.5; pf.lightScore++;
+        document.getElementById('lightScore').textContent = String(pf.lightScore).padStart(3,'0');
+        spawnFloatMsg("포세이돈의 잔물결을 사뿐히 넘었다 💧"); sfxCollect();
+      } else { pf.worldX -= Math.sign(dx)*-6; sfxHit(); }
+    }
+  });
+  particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=0.2;p.life--;});
+  particles = particles.filter(p=>p.life>0);
+  bubbles.forEach(b=>{ b.y-=b.speed; if(b.y<-10) b.y=370; });
+  updateDust();
+  document.getElementById('progressPct').textContent = Math.min(100, Math.round(pf.worldX/PLATFORMER.length*100))+'%';
+
+  if(pf.worldX>=PLATFORMER.length){
+    document.getElementById('actionBtn').style.display='flex';
+    document.getElementById('actionBtn').innerHTML='🌟<br>세상으로';
+    document.getElementById('actionBtn').onclick = ()=>{ sfxClear(); triggerBirth(); document.getElementById('actionBtn').style.display='none'; };
+  }
+}
+function spawnFloatMsg(msg){
+  const div=document.createElement('div');
+  div.style.cssText=`position:fixed; top:96px; left:50%; transform:translateX(-50%); background:rgba(255,255,255,0.95); color:#8a6fb0; padding:8px 16px; border-radius:999px; font-size:12.5px; z-index:50; box-shadow:0 6px 16px rgba(0,0,0,0.3); animation:fadeMsg 2.4s ease forwards; max-width:80%; text-align:center;`;
+  div.textContent='💡 '+msg; document.body.appendChild(div); setTimeout(()=>div.remove(),2400);
+}
+const styleTag=document.createElement('style');
+styleTag.textContent=`@keyframes fadeMsg{0%{opacity:0; transform:translate(-50%,-8px);}15%{opacity:1;transform:translate(-50%,0);}85%{opacity:1;}100%{opacity:0;}}`;
+document.head.appendChild(styleTag);
+
+function pfDraw(){
+  const camX=Math.max(0, pf.worldX-150);
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  const grad=ctx.createRadialGradient(canvas.width/2,canvas.height/2,40,canvas.width/2,canvas.height/2,500);
+  grad.addColorStop(0,'#ff9ecb'); grad.addColorStop(0.55,'#c9578f'); grad.addColorStop(1,'#5a2050');
+  ctx.fillStyle=grad; ctx.fillRect(0,0,canvas.width,canvas.height);
+  bubbles.forEach(b=>{ ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,Math.PI*2); ctx.fillStyle='rgba(255,255,255,0.35)'; ctx.fill(); });
+  ctx.fillStyle='rgba(200,80,120,0.55)'; ctx.fillRect(0,PLATFORMER.groundY+22,canvas.width,canvas.height-(PLATFORMER.groundY+22));
+  ctx.strokeStyle='rgba(255,255,255,0.3)'; ctx.lineWidth=3; ctx.beginPath();
+  for(let x=0;x<=canvas.width;x+=20){ const y=PLATFORMER.groundY+22+Math.sin((x+camX)*0.05)*4; x===0?ctx.moveTo(x,y):ctx.lineTo(x,y); }
+  ctx.stroke();
+  PLATFORMER.blocks.forEach(b=>{
+    const sx=b.x-camX, by=PLATFORMER.groundY-130+Math.sin((globalT+b.x)*0.05)*3;
+    if(sx>-40 && sx<canvas.width+40){
+      ctx.fillStyle=b.used?'rgba(255,255,255,0.15)':'#ffe27a';
+      ctx.beginPath(); ctx.arc(sx,by,17,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle='rgba(255,255,255,0.6)'; ctx.lineWidth=2; ctx.stroke();
+      if(!b.used){ ctx.fillStyle='#8a4a10'; ctx.font='bold 15px monospace'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('?', sx, by+1); }
+    }
+  });
+  PLATFORMER.enemies.forEach(e=>{
+    if(!e.alive) return;
+    const ex=(e.curX??e.x)-camX;
+    if(ex>-30 && ex<canvas.width+30){
+      ctx.fillStyle='rgba(180,140,220,0.85)';
+      ctx.beginPath(); ctx.arc(ex,PLATFORMER.groundY+14,16,Math.PI,0); ctx.fill();
+      ctx.fillRect(ex-16,PLATFORMER.groundY+14,32,10);
+      ctx.fillStyle='#3a2a45';
+      ctx.beginPath(); ctx.arc(ex-5,PLATFORMER.groundY+10,2,0,Math.PI*2); ctx.arc(ex+5,PLATFORMER.groundY+10,2,0,Math.PI*2); ctx.fill();
+    }
+  });
+  particles.forEach(p=>{ ctx.beginPath(); ctx.arc(p.x-camX,p.y,4,0,Math.PI*2); ctx.fillStyle='rgba(255,230,150,'+(p.life/30)+')'; ctx.fill(); });
+  drawDust(camX);
+  const gateX=PLATFORMER.length-camX;
+  if(gateX<canvas.width+100){
+    const g2=ctx.createRadialGradient(gateX,190,10,gateX,190,160);
+    g2.addColorStop(0,'rgba(255,255,255,0.95)'); g2.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.fillStyle=g2; ctx.fillRect(gateX-160,0,320,canvas.height);
+    ctx.strokeStyle='rgba(255,255,255,0.8)'; ctx.lineWidth=4;
+    ctx.beginPath(); ctx.arc(gateX,PLATFORMER.groundY-20,55,Math.PI,0); ctx.stroke();
+  }
+  drawWalkerSide(pf.worldX-camX, pf.y-2, pf.vx!==0, !pf.grounded, pf.t, pf.facingRight);
+}
+function triggerBirth(){
+  document.getElementById('birthFlash').style.opacity=1;
+  setTimeout(()=>{ document.getElementById('birthText').style.display='flex'; }, 900);
+}
+function startBabyHospital(){
+  document.getElementById('birthText').style.display='none';
+  document.getElementById('birthFlash').style.opacity=0;
+  startTopdown('hospital');
+}
+
+/* =========================================================
+   TOPDOWN (탑뷰 공용 엔진) — Chapter 1 / Chapter 4(병원) 공용
+   ========================================================= */
+const TILE=45, MAP_W=16, MAP_H=8;
+let currentLevel=null, td, hVel={x:0,y:0}, completed=[], nearMission=null, imgLevelBg=null;
+
+function startTopdown(key){
+  mode='topdown'; currentLevel = TOPDOWN_LEVELS[key];
+  completed = JSON.parse(sessionStorage.getItem('missionsDone_'+key)||'[]');
+  document.getElementById('marioHud').style.display='none';
+  document.getElementById('jumpBtn').style.display='none';
+  document.getElementById('nexusTop').style.display='flex';
+  document.getElementById('nexusLog').style.display='block';
+  document.getElementById('missionList').style.display='flex';
+  document.getElementById('joyBase').style.display='block';
+  document.getElementById('nexusTitle').textContent = (currentLevel.characterType==='baby'?'🏛️ ':'🏹 ') + currentLevel.name;
+  document.getElementById('nexusLog').innerHTML = currentLevel.characterType==='baby'
+    ? '<b style="color:#ffe27a;">[이안이의 시점]</b> 아직 눈도 제대로 못 뜨지만, 조금씩 세상을 느껴봅니다. 방향키로 둥실둥실 이동해보세요.'
+    : '<b style="color:#ffe27a;">[TIP]</b> 방향키(←→↑↓)로 이동하고, 미션 위치에서 ❗버튼을 눌러 이야기를 확인하세요.';
+  canvas.width = MAP_W*TILE; canvas.height = MAP_H*TILE;
+  imgLevelBg = null;
+  if(currentLevel.bgImage){ imgLevelBg = new Image(); imgLevelBg.src = currentLevel.bgImage; }
+  td = { x: currentLevel.start.x*TILE+TILE/2, y: currentLevel.start.y*TILE+TILE/2, speed: currentLevel.characterType==='baby'?2.0:2.6, t:0, dir:'down' };
+  hVel = {x:0,y:0}; dust=[];
+  document.getElementById('heartFill').style.width = (30+completed.length*14)+'%';
+  document.getElementById('thrillFill').style.width = (20+completed.length*16)+'%';
+  renderMissionList();
+  if(!window._snowStarted){ window._snowStarted=true; setInterval(spawnSnow, 500); }
+}
+function isWall(px,py){
+  const tx=Math.floor(px/TILE), ty=Math.floor(py/TILE);
+  if(tx<0||ty<0||tx>=MAP_W||ty>=MAP_H) return true;
+  for(const w of currentLevel.walls){ if(tx>=w.x1&&tx<=w.x2&&ty>=w.y1&&ty<=w.y2) return true; }
+  return false;
+}
+function tdUpdate(){
+  td.t++; globalT++;
+  const nx=td.x+hVel.x*td.speed, ny=td.y+hVel.y*td.speed;
+  if(hVel.x<-0.2) td.dir='left'; else if(hVel.x>0.2) td.dir='right'; else if(hVel.y<-0.2) td.dir='up'; else if(hVel.y>0.2) td.dir='down';
+  const moving = (hVel.x!==0||hVel.y!==0);
+  if(moving && td.t%12===0){ spawnDust(td.x, td.y+16); if(currentLevel.characterType!=='baby') sfxStep(); }
+  if(!isWall(nx,td.y)) td.x=nx;
+  if(!isWall(td.x,ny)) td.y=ny;
+  updateDust();
+  nearMission=null;
+  for(const m of currentLevel.missions){
+    if(completed.includes(m.id)) continue;
+    const mx=m.x*TILE+TILE/2, my=m.y*TILE+TILE/2;
+    if(Math.hypot(td.x-mx, td.y-my)<32){ nearMission=m; break; }
+  }
+  document.getElementById('actionBtn').style.display = nearMission?'flex':'none';
+  if(nearMission) document.getElementById('actionBtn').innerHTML = currentLevel.characterType==='baby' ? '❗<br>느껴보기' : '❗<br>상호작용';
+}
+function tdDraw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  if(imgLevelBg && imgLevelBg.complete){ ctx.drawImage(imgLevelBg,0,0,canvas.width,canvas.height); }
+  else {
+    const isStreet = currentLevel.theme==='street';
+    for(let x=0;x<MAP_W;x++)for(let y=0;y<MAP_H;y++){
+      if(isStreet){
+        const roadRow = (y===3||y===4);
+        ctx.fillStyle = roadRow ? ((x+y)%2===0?'#c9beb0':'#c2b7a8') : ((x+y)%2===0?'#dff0d8':'#d5e8cc');
+      } else {
+        ctx.fillStyle=(x+y)%2===0?'#f3e9d8':'#ede0cc';
+      }
+      ctx.fillRect(x*TILE,y*TILE,TILE,TILE);
+    }
+    ctx.fillStyle='#8a6238';
+    currentLevel.walls.forEach(w=> ctx.fillRect(w.x1*TILE,w.y1*TILE,(w.x2-w.x1+1)*TILE,(w.y2-w.y1+1)*TILE));
+  }
+  if(currentLevel.props){
+    currentLevel.props.forEach(p=>{
+      ctx.font='26px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(p.icon, p.x*TILE+TILE/2, p.y*TILE+TILE/2);
+    });
+  }
+  currentLevel.missions.forEach(m=>{
+    const mx=m.x*TILE+TILE/2, my=m.y*TILE+TILE/2, done=completed.includes(m.id);
+    const bounce = done?0:Math.sin((globalT+m.id*30)*0.06)*4;
+    const pulse = done?18:18+Math.sin(globalT*0.08)*2;
+    ctx.beginPath(); ctx.arc(mx,my+bounce,pulse,0,Math.PI*2);
+    ctx.fillStyle = done?'rgba(127,209,185,0.5)':'rgba(242,198,109,0.5)'; ctx.fill();
+    ctx.font='20px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(done?'✅':(m.icon||'✨'), mx, my+bounce);
+  });
+  drawDust(0);
+  const moving=(hVel.x!==0||hVel.y!==0);
+  if(currentLevel.characterType==='baby') drawBabyFloat(td.x, td.y, moving, td.t);
+  else drawWalkerTop(td.x, td.y, moving, td.t, td.dir);
+}
+function spawnSnow(){
+  if(mode!=='topdown') return;
+  const s=document.createElement('div'); s.className='snow'; s.style.left=Math.random()*100+'%'; s.style.animationDuration=(3+Math.random()*3)+'s';
+  document.getElementById('gameWrap').appendChild(s); setTimeout(()=>s.remove(),6000);
+}
+document.getElementById('actionBtn').addEventListener('click', ()=>{ if(mode==='topdown' && nearMission) tryInteract(); });
+function tryInteract(){
+  sfxInteract();
+  const mission = nearMission;
+  showDialogue(mission, ()=> onDialogueDone(mission.id));
+}
+function onDialogueDone(id){
+  const key = Object.keys(TOPDOWN_LEVELS).find(k=>TOPDOWN_LEVELS[k]===currentLevel);
+  if(!completed.includes(id)){ completed.push(id); sessionStorage.setItem('missionsDone_'+key, JSON.stringify(completed)); sfxCollect(); }
+  renderMissionList();
+  document.getElementById('heartFill').style.width = Math.min(100, 20+completed.length*16)+'%';
+  document.getElementById('thrillFill').style.width = Math.min(100, 15+completed.length*17)+'%';
+  if(completed.length === currentLevel.missions.length){
+    sfxClear();
+    document.getElementById('cardIcon').textContent = currentLevel.cardReward.icon;
+    document.getElementById('cardName').textContent = currentLevel.cardReward.name;
+    document.getElementById('cardEpithet').textContent = currentLevel.cardReward.epithet || '';
+    setTimeout(()=>document.getElementById('cardScreen').style.display='flex', 400);
+  }
+}
+function closeCardScreen(){ document.getElementById('cardScreen').style.display='none'; backToMap(); }
+function renderMissionList(){
+  document.getElementById('missionList').innerHTML = currentLevel.missions.map(m=>
+    `<span class="m-tag ${completed.includes(m.id)?'done':''}">${completed.includes(m.id)?'✅':'▫️'} ${m.label}</span>`
+  ).join('');
+}
+
+/* ---------- 조작 (조이스틱 + 키보드) ---------- */
+const joyBase=document.getElementById('joyBase'), joyKnob=document.getElementById('joyKnob');
+function joyHandle2D(cx0,cy0){
+  const rect=joyBase.getBoundingClientRect();
+  const cx=rect.left+rect.width/2, cy=rect.top+rect.height/2;
+  let dx=cx0-cx, dy=cy0-cy;
+  const dist=Math.min(40, Math.hypot(dx,dy));
+  const angle=Math.atan2(dy,dx);
+  const kx=Math.cos(angle)*dist, ky=Math.sin(angle)*dist;
+  joyKnob.style.left=(32+kx)+'px'; joyKnob.style.top=(32+ky)+'px';
+  if(mode==='platform'){ inputLeft = kx<-10; inputRight = kx>10; }
+  else if(mode==='topdown'){ hVel.x = Math.abs(kx)>10? kx/40:0; hVel.y = Math.abs(ky)>10? ky/40:0; }
+}
+joyBase.addEventListener('touchstart', e=>joyHandle2D(e.touches[0].clientX,e.touches[0].clientY));
+joyBase.addEventListener('touchmove', e=>{joyHandle2D(e.touches[0].clientX,e.touches[0].clientY); e.preventDefault();}, {passive:false});
+joyBase.addEventListener('touchend', ()=>{ inputLeft=false; inputRight=false; hVel.x=0; hVel.y=0; joyKnob.style.left='32px'; joyKnob.style.top='32px'; });
+document.getElementById('jumpBtn').addEventListener('touchstart', e=>{ jumpQueued=true; e.preventDefault(); });
+document.getElementById('jumpBtn').addEventListener('click', ()=>{ jumpQueued=true; });
+
+window.addEventListener('keydown', e=>{
+  const k=e.key.toLowerCase();
+  if(document.getElementById('dialogueOverlay').style.display==='flex'){
+    if(k===' '||k==='enter'){ document.getElementById('dialogueBox').click(); }
+    return;
+  }
+  if(mode==='platform'){
+    if(k==='arrowleft'||k==='a') inputLeft=true;
+    if(k==='arrowright'||k==='d') inputRight=true;
+    if(k==='arrowup'||k==='w'||k===' ') jumpQueued=true;
+  } else if(mode==='topdown'){
+    if(k==='arrowleft'||k==='a') hVel.x=-1;
+    if(k==='arrowright'||k==='d') hVel.x=1;
+    if(k==='arrowup'||k==='w') hVel.y=-1;
+    if(k==='arrowdown'||k==='s') hVel.y=1;
+    if((k===' '||k==='enter') && nearMission) tryInteract();
+  }
+});
+window.addEventListener('keyup', e=>{
+  const k=e.key.toLowerCase();
+  if(mode==='platform'){
+    if(k==='arrowleft'||k==='a') inputLeft=false;
+    if(k==='arrowright'||k==='d') inputRight=false;
+  } else if(mode==='topdown'){
+    if(['arrowleft','a','arrowright','d'].includes(k)) hVel.x=0;
+    if(['arrowup','w','arrowdown','s'].includes(k)) hVel.y=0;
+  }
+});
+
+/* ---------- 메인 루프 ---------- */
+function loop(){
+  if(mode==='platform'){ pfUpdate(); pfDraw(); }
+  else if(mode==='topdown'){ tdUpdate(); tdDraw(); }
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>
