@@ -14,6 +14,13 @@ body{
 .hidden{display:none !important;}
 .screen{width:100%; max-width:720px;}
 
+/* ===== 가로 회전 안내 ===== */
+#rotateOverlay{ position:fixed; inset:0; background:#0a0a1a; z-index:9999; display:none; align-items:center; justify-content:center; flex-direction:column; text-align:center; color:#fff; padding:30px; }
+#rotateOverlay .icon{ font-size:60px; margin-bottom:16px; animation:rotatePulse 1.4s ease-in-out infinite; }
+@keyframes rotatePulse{ 0%,100%{transform:rotate(0deg);} 50%{transform:rotate(90deg);} }
+#rotateOverlay h2{ font-size:18px; margin-bottom:8px; color:#f2c66d; }
+#rotateOverlay p{ font-size:13px; color:#cbb8e8; }
+
 /* ===== 타이틀 ===== */
 #screen-title{
   min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px;
@@ -66,11 +73,15 @@ body{
 #gameWrap{position:relative; width:100%; max-width:720px; touch-action:none;}
 canvas{width:100%; display:block; background:#3a1030; image-rendering:pixelated;}
 #nexusLog{ display:none; width:100%; max-width:720px; background:linear-gradient(180deg,#2a3550,#1c2540); border-top:3px solid #8a6238; padding:8px 14px; font-size:12px; color:#cfe0ff; min-height:40px; z-index:20; }
-#actionBtn{ position:absolute; right:20px; bottom:96px; width:70px; height:70px; border-radius:50%; background:radial-gradient(circle,#ffe27a,#e0a93a); border:3px solid #fff; color:#3a2a10; font-weight:900; font-size:12px; display:none; align-items:center; justify-content:center; box-shadow:0 6px 16px rgba(0,0,0,0.4); z-index:15; cursor:pointer; text-align:center; line-height:1.2; animation:actionPulse 1s ease-in-out infinite; }
+
+/* ⭐ 상호작용/점프 버튼: 우측/좌측 "상단" 모서리로 이동 → Netlify 알림과 절대 안 겹침 */
+#actionBtn{ position:absolute; top:10px; right:10px; width:62px; height:62px; border-radius:50%; background:radial-gradient(circle,#ffe27a,#e0a93a); border:3px solid #fff; color:#3a2a10; font-weight:900; font-size:11px; display:none; align-items:center; justify-content:center; box-shadow:0 6px 16px rgba(0,0,0,0.4); z-index:55; cursor:pointer; text-align:center; line-height:1.2; animation:actionPulse 1s ease-in-out infinite; }
 @keyframes actionPulse{ 0%,100%{transform:scale(1);} 50%{transform:scale(1.08);} }
-#joyBase{ position:absolute; left:24px; bottom:24px; width:104px; height:104px; border-radius:50%; background:rgba(255,255,255,0.15); border:2px solid rgba(255,255,255,0.4); z-index:15; touch-action:none; }
-#joyKnob{ position:absolute; left:32px; top:32px; width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,0.65); pointer-events:none; }
-#jumpBtn{ position:absolute; right:24px; bottom:24px; width:78px; height:78px; border-radius:50%; background:radial-gradient(circle,#ff9ecb,#e0607a); border:3px solid #fff; color:#fff; font-weight:900; font-size:14px; display:flex; align-items:center; justify-content:center; z-index:15; box-shadow:0 6px 16px rgba(0,0,0,0.4); }
+#jumpBtn{ position:absolute; top:10px; left:10px; width:62px; height:62px; border-radius:50%; background:radial-gradient(circle,#ff9ecb,#e0607a); border:3px solid #fff; color:#fff; font-weight:900; font-size:12px; display:flex; align-items:center; justify-content:center; z-index:55; box-shadow:0 6px 16px rgba(0,0,0,0.4); }
+
+/* 기존 조이스틱 그래픽은 완전히 숨김 (대신 화면 아무데나 드래그로 조작) */
+#joyBase, #joyKnob{ display:none !important; }
+#dragHint{ position:absolute; left:50%; bottom:14px; transform:translateX(-50%); background:rgba(0,0,0,0.35); color:#fff; font-size:11px; padding:5px 12px; border-radius:999px; z-index:40; pointer-events:none; opacity:.85; }
 
 /* ===== JRPG풍 대화창 ===== */
 #dialogueOverlay{ position:fixed; inset:0; background:rgba(0,0,0,0.35); display:none; align-items:flex-end; justify-content:center; z-index:100; }
@@ -135,6 +146,12 @@ canvas{width:100%; display:block; background:#3a1030; image-rendering:pixelated;
 </head>
 <body>
 
+<div id="rotateOverlay">
+  <div class="icon">📱</div>
+  <h2>화면을 가로로 돌려주세요</h2>
+  <p>이 서사시는 가로 화면에서 가장 잘 즐길 수 있어요.</p>
+</div>
+
 <!-- ================= 타이틀 ================= -->
 <div class="screen" id="screen-title">
   <div class="logo">✦ AN EPIC OF A SMALL HERO ✦</div>
@@ -174,7 +191,8 @@ canvas{width:100%; display:block; background:#3a1030; image-rendering:pixelated;
     <canvas id="game"></canvas>
     <div id="actionBtn">❗<br>상호작용</div>
     <div id="joyBase"><div id="joyKnob"></div></div>
-    <div id="jumpBtn">▲ 나아가기</div>
+    <div id="jumpBtn">▲</div>
+    <div id="dragHint">화면을 드래그해서 이동하세요</div>
   </div>
   <div id="nexusLog"></div>
 </div>
@@ -222,6 +240,7 @@ canvas{width:100%; display:block; background:#3a1030; image-rendering:pixelated;
 <div class="toast" id="toast"></div>
 
 <script>
+
 /* ============================================================
    ✏️ CONFIG — 스토리/인물/지역 데이터
    ============================================================ */
@@ -443,6 +462,7 @@ const PLATFORMER = {
 /* ============================================================
    ✏️ CONFIG 끝
    ============================================================ */
+
 document.getElementById('dday').textContent = (()=>{ const d=Math.floor((new Date()-new Date(birthDate))/86400000); return d>=0?d:0; })();
 
 (function initStars(){
@@ -456,6 +476,23 @@ document.getElementById('dday').textContent = (()=>{ const d=Math.floor((new Dat
     scr.appendChild(s);
   }
 })();
+
+/* ---------------- 가로 화면 안내 ---------------- */
+function checkOrientation(){
+  const isPortrait = window.innerHeight > window.innerWidth;
+  const isSmallScreen = Math.min(window.innerWidth, window.innerHeight) < 900;
+  document.getElementById('rotateOverlay').style.display = (isPortrait && isSmallScreen) ? 'flex' : 'none';
+}
+window.addEventListener('resize', checkOrientation);
+window.addEventListener('orientationchange', checkOrientation);
+checkOrientation();
+function tryLockLandscape(){
+  try{
+    const el = document.documentElement;
+    if(el.requestFullscreen){ el.requestFullscreen().catch(()=>{}); }
+    if(screen.orientation && screen.orientation.lock){ screen.orientation.lock('landscape').catch(()=>{}); }
+  }catch(e){}
+}
 
 /* ---------------- 사운드 ---------------- */
 let audioCtx=null, soundOn=true;
@@ -479,7 +516,7 @@ function toggleMute(){ soundOn=!soundOn; document.getElementById('muteBtn').text
 function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.style.opacity=1; setTimeout(()=>t.style.opacity=0, 1800); }
 
 /* ---------------- 화면 전환 ---------------- */
-function enterMap(){ ensureAudio(); document.getElementById('screen-title').style.display='none'; document.getElementById('screen-map').style.display='flex'; renderWorldMap(); }
+function enterMap(){ ensureAudio(); tryLockLandscape(); document.getElementById('screen-title').style.display='none'; document.getElementById('screen-map').style.display='flex'; renderWorldMap(); }
 function backToMap(){ mode=null; pendingAction=null; document.getElementById('actionBtn').style.display='none'; document.getElementById('screen-game').style.display='none'; document.getElementById('screen-map').style.display='flex'; }
 
 function renderWorldMap(){
@@ -644,7 +681,7 @@ function drawNPC(cx, groundY, t, pal, done){
   }
 }
 
-/* ---------------- 배경 소품 (정교한 캔버스 드로잉) ---------------- */
+/* ---------------- 배경 소품 ---------------- */
 const THEME_SKY = {
   street:['#bcdcf5','#eaf6ff'], alley:['#9cb8d8','#dbe8f0'], foodstreet:['#d89860','#f5d9a8'],
   travel:['#7ec8e3','#cdeffa'], wedding:['#ffe0ec','#fff8f0'],
@@ -774,7 +811,7 @@ function startBirthIntro(){
   document.getElementById('nexusLog').style.display='none';
   document.getElementById('missionList').style.display='none';
   document.getElementById('jumpBtn').style.display='flex';
-  document.getElementById('joyBase').style.display='block';
+  document.getElementById('dragHint').style.display='block';
   clearAction();
   canvas.width=720; canvas.height=360;
   pf = { worldX:60, y:PLATFORMER.groundY, vy:0, vx:0, grounded:true, facingRight:true, t:0, lightScore:0 };
@@ -894,7 +931,7 @@ function startBabyHospital(){
    FIELD ENGINE (메이플식 사이드뷰 마을/실내 탐험)
    ========================================================= */
 let currentChapterKey=null, currentFieldId=null, fieldState=null, talked=[];
-let hVel={x:0,y:0};
+let hVel={x:0};
 
 function chapterTotalNpc(key){ const ch=CHAPTER_FIELDS[key]; return ch.order.reduce((s,fid)=> s+ch.fields[fid].npcs.length, 0); }
 
@@ -911,10 +948,10 @@ function startField(chapterKey, fieldId, spawnSide){
   document.getElementById('nexusTop').style.display='flex';
   document.getElementById('nexusLog').style.display='block';
   document.getElementById('missionList').style.display='flex';
-  document.getElementById('joyBase').style.display='block';
+  document.getElementById('dragHint').style.display='block';
   clearAction();
   fieldState = { x: spawnSide==='right'? field.width-60 : 60, t:0, moving:false, facingRight: spawnSide!=='right' };
-  hVel={x:0,y:0}; dust=[];
+  hVel={x:0}; dust=[];
   updateFieldUI();
   if(!window._snowStarted){ window._snowStarted=true; setInterval(spawnSnow, 500); }
 }
@@ -924,8 +961,8 @@ function updateFieldUI(){
   const total = chapterTotalNpc(currentChapterKey);
   document.getElementById('nexusTitle').textContent = (currentChapterKey==='hospital'?'🏛️ ':'🏹 ') + field.name + ` (${talked.length}/${total})`;
   document.getElementById('nexusLog').innerHTML = currentChapterKey==='hospital'
-    ? '<b style="color:#ffe27a;">[이안이의 시점]</b> 방향키 또는 조이스틱으로 이동하고, ❗ 근처에서 상호작용 버튼을 눌러보세요.'
-    : '<b style="color:#ffe27a;">[TIP]</b> 좌우로 이동해 마을을 탐험하고, 화면 끝에서 다음 장소로 이동할 수 있어요.';
+    ? '<b style="color:#ffe27a;">[이안이의 시점]</b> 화면을 좌우로 드래그해 이동하고, ❗ 근처에서 상단 우측 버튼을 눌러보세요.'
+    : '<b style="color:#ffe27a;">[TIP]</b> 화면을 좌우로 드래그해 마을을 탐험하고, 화면 끝에서 다음 장소로 이동할 수 있어요.';
   document.getElementById('heartFill').style.width = Math.min(100, 20+talked.length*(80/total))+'%';
   document.getElementById('thrillFill').style.width = Math.min(100, 15+talked.length*(85/total))+'%';
   document.getElementById('missionList').innerHTML = field.npcs.map(n=>
@@ -953,7 +990,7 @@ function fieldUpdate(){
     const d = Math.abs(fieldState.x-npc.x);
     if(d<50 && d<nd){ nd=d; near=npc; }
   });
-  if(near){ setAction('❗<br>대화하기', ()=> tryTalk(near)); }
+  if(near){ setAction('❗<br>대화', ()=> tryTalk(near)); }
   else clearAction();
 }
 function fieldDraw(){
@@ -998,23 +1035,35 @@ function spawnSnow(){
   document.getElementById('gameWrap').appendChild(s); setTimeout(()=>s.remove(),6000);
 }
 
-/* ---------- 조작 (조이스틱 + 키보드) ---------- */
-const joyBase=document.getElementById('joyBase'), joyKnob=document.getElementById('joyKnob');
-function joyHandle2D(cx0,cy0){
-  const rect=joyBase.getBoundingClientRect();
-  const cx=rect.left+rect.width/2, cy=rect.top+rect.height/2;
-  let dx=cx0-cx, dy=cy0-cy;
-  const dist=Math.min(40, Math.hypot(dx,dy));
-  const angle=Math.atan2(dy,dx);
-  const kx=Math.cos(angle)*dist, ky=Math.sin(angle)*dist;
-  joyKnob.style.left=(32+kx)+'px'; joyKnob.style.top=(32+ky)+'px';
-  if(mode==='platform'){ inputLeft = kx<-10; inputRight = kx>10; }
-  else if(mode==='field'){ hVel.x = Math.abs(kx)>10? kx/40:0; }
-}
-joyBase.addEventListener('touchstart', e=>joyHandle2D(e.touches[0].clientX,e.touches[0].clientY));
-joyBase.addEventListener('touchmove', e=>{joyHandle2D(e.touches[0].clientX,e.touches[0].clientY); e.preventDefault();}, {passive:false});
-joyBase.addEventListener('touchend', ()=>{ inputLeft=false; inputRight=false; hVel.x=0; joyKnob.style.left='32px'; joyKnob.style.top='32px'; });
-document.getElementById('jumpBtn').addEventListener('touchstart', e=>{ jumpQueued=true; e.preventDefault(); });
+/* ---------- ⭐ 화면 아무 곳이나 드래그로 조작 (조이스틱 그래픽 없이) ---------- */
+const gameWrapEl = document.getElementById('gameWrap');
+let touchCtl = { active:false, startX:0, startY:0, jumpCooldown:0 };
+function isControlButton(el){ return el && el.closest && (el.closest('#actionBtn') || el.closest('#jumpBtn')); }
+gameWrapEl.addEventListener('touchstart', e=>{
+  if(isControlButton(e.target)) return;
+  const t=e.touches[0];
+  touchCtl.active=true; touchCtl.startX=t.clientX; touchCtl.startY=t.clientY; touchCtl.jumpCooldown=0;
+  document.getElementById('dragHint').style.opacity='0';
+}, {passive:true});
+gameWrapEl.addEventListener('touchmove', e=>{
+  if(!touchCtl.active) return;
+  const t=e.touches[0];
+  const dx = t.clientX-touchCtl.startX;
+  const dy = t.clientY-touchCtl.startY;
+  if(mode==='field'){
+    hVel.x = Math.max(-1, Math.min(1, dx/45));
+  } else if(mode==='platform'){
+    inputLeft = dx < -14;
+    inputRight = dx > 14;
+    if(dy < -55 && touchCtl.jumpCooldown<=0){ jumpQueued=true; touchCtl.jumpCooldown=20; }
+  }
+  if(touchCtl.jumpCooldown>0) touchCtl.jumpCooldown--;
+  e.preventDefault();
+}, {passive:false});
+function endTouchCtl(){ touchCtl.active=false; hVel.x=0; inputLeft=false; inputRight=false; }
+gameWrapEl.addEventListener('touchend', endTouchCtl);
+gameWrapEl.addEventListener('touchcancel', endTouchCtl);
+document.getElementById('jumpBtn').addEventListener('touchstart', e=>{ jumpQueued=true; e.preventDefault(); e.stopPropagation(); });
 document.getElementById('jumpBtn').addEventListener('click', ()=>{ jumpQueued=true; });
 
 window.addEventListener('keydown', e=>{
@@ -1053,3 +1102,5 @@ loop();
 </script>
 </body>
 </html>
+
+
