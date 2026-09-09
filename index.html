@@ -72,11 +72,12 @@ canvas{width:100%; display:block; background:#3a1030; image-rendering:pixelated;
 #joyKnob{ position:absolute; left:32px; top:32px; width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,0.65); pointer-events:none; }
 #jumpBtn{ position:absolute; right:24px; bottom:24px; width:78px; height:78px; border-radius:50%; background:radial-gradient(circle,#ff9ecb,#e0607a); border:3px solid #fff; color:#fff; font-weight:900; font-size:14px; display:flex; align-items:center; justify-content:center; z-index:15; box-shadow:0 6px 16px rgba(0,0,0,0.4); }
 
-/* ===== ⭐ JRPG풍 대화창 (참고 이미지 기반 재설계) ===== */
+/* ===== JRPG풍 대화창 ===== */
 #dialogueOverlay{ position:fixed; inset:0; background:rgba(0,0,0,0.35); display:none; align-items:flex-end; justify-content:center; z-index:100; }
 #dialogueStage{ width:100%; max-width:720px; position:relative; height:min(46vh,320px); display:flex; align-items:flex-end; }
 #portraitWrap{ position:absolute; left:0; bottom:0; width:42%; max-width:260px; height:100%; display:flex; align-items:flex-end; justify-content:center; pointer-events:none; z-index:2; }
 #portraitImg{ width:100%; height:auto; max-height:100%; object-fit:contain; filter:drop-shadow(0 10px 20px rgba(0,0,0,0.5)); animation:portraitIn .4s ease; }
+#portraitFallback{ display:none; width:130px; height:130px; border-radius:50%; background:radial-gradient(circle,#fff8e8,#c9b8e8); align-items:center; justify-content:center; font-size:60px; margin-bottom:6px; box-shadow:0 10px 20px rgba(0,0,0,0.45); animation:portraitIn .4s ease; }
 @keyframes portraitIn{ from{transform:translateY(30px); opacity:0;} to{transform:translateY(0); opacity:1;} }
 #dialogueBox{
   position:relative; margin-left:34%; width:66%; margin-right:2%;
@@ -95,9 +96,8 @@ canvas{width:100%; display:block; background:#3a1030; image-rendering:pixelated;
 #dialogueText .em{ color:#ffd98a; font-weight:700; }
 #nextIndicator{ position:absolute; right:16px; bottom:8px; color:#ffe9b0; font-size:13px; animation:bounceArrow 1s ease-in-out infinite; }
 @keyframes bounceArrow{ 0%,100%{transform:translateY(0);} 50%{transform:translateY(4px);} }
-#dialogueBtn{ display:none; }
 
-/* ===== 챕터 인트로 카드 (뮤즈 서사시 스타일) ===== */
+/* ===== 챕터 인트로 카드 ===== */
 #chapterIntro{ position:fixed; inset:0; background:#08061a; display:none; align-items:center; justify-content:center; flex-direction:column; z-index:500; padding:30px; text-align:center; }
 #chapterIntro .ci-ornament{font-size:20px; color:#f2c66d; opacity:0; animation:ciFade 3.2s ease forwards; margin-bottom:14px;}
 #chapterIntro .ci-num{font-size:12px; letter-spacing:6px; color:#cbb8e8; margin-bottom:10px; opacity:0; animation:ciFade 3.2s ease forwards;}
@@ -182,7 +182,10 @@ canvas{width:100%; display:block; background:#3a1030; image-rendering:pixelated;
 <!-- ================= JRPG 대화창 ================= -->
 <div id="dialogueOverlay">
   <div id="dialogueStage">
-    <div id="portraitWrap"><img id="portraitImg" src="" alt=""></div>
+    <div id="portraitWrap">
+      <img id="portraitImg" src="" alt="">
+      <div id="portraitFallback"></div>
+    </div>
     <div id="dialogueBox">
       <div id="speakerName"></div>
       <div id="dialogueText"></div>
@@ -220,15 +223,41 @@ canvas{width:100%; display:block; background:#3a1030; image-rendering:pixelated;
 
 <script>
 /* ============================================================
-   ✏️ CONFIG — 챕터/미션/대사/이미지 파일명은 여기서만 수정하세요
+   ✏️ CONFIG — 스토리/인물/지역 데이터
    ============================================================ */
-
-/* 초상화 이미지: images/ 폴더 기준 경로 */
 const PORTRAITS = {
   muse: { img:"images/muse.png", emoji:"🌟", name:"뮤즈" },
-  mom:  { img:"images/mom.png",  emoji:"👩", name:"어머니 · 데메테르의 축복을 받은 자" },
-  dad:  { img:"images/dad.png",  emoji:"🧑", name:"아버지 · 끈질긴 오디세우스" },
-  ian:  { img:"images/ian.png",  emoji:"👶", name:"이안 · 작은 영웅" }
+  mom:  { img:"images/mom.png",  emoji:"👩", name:"어머니 장세은" },
+  dad:  { img:"images/dad.png",  emoji:"🧑", name:"아버지 전시현" },
+  ian:  { img:"images/ian.png",  emoji:"👶", name:"이안" },
+
+  coworker_f:    { img:"", emoji:"👩‍🍳", name:"식당 이모님" },
+  coworker_m:    { img:"", emoji:"🧑‍💼", name:"회사 동료" },
+  friend_of_mom: { img:"", emoji:"👧", name:"엄마의 단짝" },
+  jokbal_owner:  { img:"", emoji:"👨‍🍳", name:"족발집 사장님" },
+  receptionist:  { img:"", emoji:"👩‍⚕️", name:"접수처 간호사" },
+  doctor:        { img:"", emoji:"🩺", name:"담당 의사 선생님" },
+  nurse:         { img:"", emoji:"👩‍⚕️", name:"간호사" },
+  grandma_p:     { img:"", emoji:"👵", name:"할머니 유윤재" },
+  grandpa_m:     { img:"", emoji:"👴", name:"외할아버지 장건식" },
+  grandma_m:     { img:"", emoji:"👵", name:"외할머니 유재순" },
+  grandpa_tribute:{ img:"", emoji:"🕊️", name:"할아버지 전용식 (하늘에서)" }
+};
+
+const PALETTES = {
+  apron:  {skin:'#f4c9a0', hair:'#4a3524', cloth:'#e8b04a', cloth2:'#5a4a30'},
+  suit:   {skin:'#f4c9a0', hair:'#2a2a2a', cloth:'#3a4a6a', cloth2:'#20263a'},
+  casual: {skin:'#f4c9a0', hair:'#3a2a20', cloth:'#e08a9c', cloth2:'#7a4a55'},
+  chef:   {skin:'#f4c9a0', hair:'#2a2a2a', cloth:'#ffffff', cloth2:'#3a3a3a'},
+  mom:    {skin:'#f4c9a0', hair:'#3a2a20', cloth:'#c98fd8', cloth2:'#6a4a75'},
+  dad:    {skin:'#f4c9a0', hair:'#2a2020', cloth:'#3a5a7a', cloth2:'#20303f'},
+  nurse:  {skin:'#f4c9a0', hair:'#2a2a2a', cloth:'#ffffff', cloth2:'#8ec9e0'},
+  doctor: {skin:'#f4c9a0', hair:'#2a2a2a', cloth:'#e8f0f8', cloth2:'#3a5a7a'},
+  grandma:{skin:'#f0c9a8', hair:'#d8d8d8', cloth:'#a85878', cloth2:'#5a2c3c'},
+  grandpa:{skin:'#f0c9a8', hair:'#c8c8c8', cloth:'#5a6a4a', cloth2:'#30351f'},
+  tribute:{skin:'#fff9ea', hair:'#fff', cloth:'#ffe9b0', cloth2:'#fff', glow:true},
+  prop:   {skin:'#f4c9a0', hair:'#3a2a20', cloth:'#8a6fb0', cloth2:'#4a3a6a'},
+  muse:   {skin:'#ffe9d8', hair:'#f2c66d', cloth:'#cbb8e8', cloth2:'#8a6fb0', glow:true}
 };
 
 const CHAPTERS = [
@@ -241,85 +270,181 @@ const CHAPTERS = [
   { id:5, title:"이타카의 아침", subtitle:"여정은 계속된다", icon:"🌱", status:"soon", pos:{x:88,y:62} }
 ];
 const birthDate = "2026-03-11";
-const ASSETS = { chapter1Bg:"images/chapter1_bg.png", hospitalBg:"images/hospital_bg.png" };
 
-/* --- Chapter 1: 에로스의 화살 (회사 앞 → 족발집) --- */
-const TOPDOWN_LEVELS = {
+/* --- 챕터1 : 에로스의 화살 (사이드뷰 마을 5개 지역) --- */
+const CHAPTER_FIELDS = {
   chapter1: {
-    name:"회사 앞 · 운명의 골목", chIndex:"01", bgImage: ASSETS.chapter1Bg, characterType:"adult", theme:"street",
-    walls:[
-      {x1:6,y1:0,x2:6,y2:2},{x1:6,y1:5,x2:6,y2:7},
-      {x1:10,y1:0,x2:10,y2:2},{x1:10,y1:5,x2:10,y2:7}
-    ],
-    props:[
-      {x:1,y:3,icon:"🌳"},{x:5,y:0,icon:"🌳"},{x:11,y:0,icon:"🌳"},{x:15,y:3,icon:"🌳"},
-      {x:3,y:7,icon:"🏮"},{x:13,y:7,icon:"🏮"},{x:0,y:4.5,icon:"🚏"}
-    ],
-    start:{x:2,y:6},
-    missions:[
-      { id:1, x:2, y:1, icon:"🏹", speaker:"muse", label:"뮤즈의 노래",
-        text:"신들의 궁전 올림포스, 짓궂은 사랑의 신 《에로스》가 활시위를 당겼다.\n\n그 화살이 향한 곳은, 회사 식당에서 묵묵히 일하던 한 여인을 바라보던 어느 남자의 심장이었다.\n\n화살은 빗나가는 법이 없었다." },
-      { id:2, x:4, y:6, speaker:"dad", label:"운명에 사로잡힌 자",
-        text:"'심장이... 이상하다.'\n\n그는 그날 저녁, 마치 《오디세우스가 트로이의 목마를 설계하듯》 치밀한 작전을 세웠다.\n\n'오늘, 다 같이 족발이나 어때요?'\n\n너무나 자연스러운, 그러나 필사적인 첫 수였다." },
-      { id:3, x:8, y:6, speaker:"muse", label:"뮤즈의 노래",
-        text:"동료들 틈에 우연을 가장한 자리가 마련되었다.\n\n지혜의 여신 《아테나》조차 감탄할 만한 완벽한 위장이었으나, 정작 그의 심장은 전쟁터의 병사처럼 요동치고 있었다." },
-      { id:4, x:12, y:2, speaker:"dad", label:"포기를 모르는 사내",
-        text:"그날 이후, 그는 그녀를 향한 걸음을 멈추지 않았다.\n\n마치 《페넬로페를 향해 10년을 항해한 오디세우스》처럼 — 그의 사랑은 끈질겼고, 흔들림이 없었다." },
-      { id:5, x:14, y:6, speaker:"muse", label:"운명이 맺어지다",
-        text:"2018년 4월 13일.\n\n모이라이 세 여신 중 《클로토》가 새로운 실 하나를 자아냈다.\n두 개의 운명이, 마침내 하나로 엮이기 시작한 순간이었다.\n\n이렇게, 두 사람의 오디세이아가 시작되었다." }
-    ],
-    cardReward:{ icon:"🏹", name:"에로스의 화살", epithet:"운명이 시작된 순간의 증표" }
+    order:['street1','alley1','foodstreet','travels','wedding'],
+    cardReward:{ icon:"🏹", name:"에로스의 화살", epithet:"운명이 시작된 순간의 증표" },
+    fields:{
+      street1:{
+        name:"회사 앞 거리", width:1100, theme:'street',
+        props:[
+          {type:'building', x:100, w:180, h:220, color:'#c9a876'},
+          {type:'tree', x:300},{type:'lamp', x:420},
+          {type:'building', x:650, w:200, h:240, color:'#a88a5c'},
+          {type:'tree', x:900}
+        ],
+        exitRight:'alley1',
+        npcs:[
+          { id:'cw_f1', x:230, label:"식당 이모님", palette:'apron', lines:[
+            {speaker:'muse', label:'뮤즈의 노래', text:"신들의 궁전 올림포스, 짓궂은 사랑의 신 《에로스》가 활시위를 당겼다.\n\n그 화살이 향한 곳은, 회사 식당에서 묵묵히 일하던 한 여인을 몰래 훔쳐보던 어느 남자의 심장이었다."},
+            {speaker:'coworker_f', label:'식당 이모님', text:"'아니 총각, 오늘도 밥 먹으면서 세은 씨 쪽만 힐끔힐끔 보네?'\n\n'그, 그런거 아니에요...!'\n\n애써 부인했지만, 귀는 이미 새빨갛게 물들어 있었다."}
+          ]},
+          { id:'cw_m1', x:600, label:"회사 동료", palette:'suit', lines:[
+            {speaker:'coworker_m', label:'회사 동료', text:"'야, 너 요즘 왜 그렇게 넋을 놓고 다니냐?'\n\n'심장이... 이상해.'\n\n그는 그날 저녁, 마치 《오디세우스가 트로이의 목마를 설계하듯》 치밀한 작전을 세우기 시작했다."},
+            {speaker:'dad', label:'운명에 사로잡힌 자', text:"'오늘, 다 같이 족발이나 어때요?'\n\n너무나 자연스러운 척, 그러나 필사적인 첫 수였다."}
+          ]}
+        ]
+      },
+      alley1:{
+        name:"골목길", width:900, theme:'alley',
+        props:[{type:'lamp', x:120},{type:'plant', x:280},{type:'building', x:450,w:220,h:200,color:'#9c8468'},{type:'lamp', x:720}],
+        exitLeft:'street1', exitRight:'foodstreet',
+        npcs:[
+          { id:'fom1', x:320, label:"엄마의 단짝", palette:'casual', lines:[
+            {speaker:'friend_of_mom', label:'엄마의 단짝', text:"'세은아, 그 회사 그... 자꾸 너 챙기는 남자 있잖아. 어때?'\n\n'몰라, 그냥... 좀 웃기고, 은근히 다정해.'\n\n부인하듯 말했지만, 입가에는 옅은 미소가 걸려 있었다."}
+          ]},
+          { id:'cw_f2', x:620, label:"식당 이모님", palette:'apron', lines:[
+            {speaker:'coworker_f', label:'식당 이모님', text:"'오늘 저녁에 다 같이 족발 먹으러 간다며? 잘 좀 해봐, 총각.'\n\n지혜의 여신 《아테나》조차 감탄할 위장술이었지만, 정작 본인은 이미 전쟁터에 나서는 병사처럼 심장이 요동치고 있었다."}
+          ]}
+        ]
+      },
+      foodstreet:{
+        name:"포장마차 거리", width:1000, theme:'foodstreet',
+        props:[{type:'cart', x:220},{type:'lamp', x:420},{type:'cart', x:630},{type:'tree', x:870}],
+        exitLeft:'alley1', exitRight:'travels',
+        npcs:[
+          { id:'jok1', x:260, label:"족발집 사장님", palette:'chef', lines:[
+            {speaker:'jokbal_owner', label:'족발집 사장님', text:"'어서와요! 몇 분이세요?'\n\n우연을 가장한 자리가 마련되었다. 동료들 틈에 섞여 앉았지만, 두 사람의 시선은 자꾸만 서로를 향했다."}
+          ]},
+          { id:'mom_d1', x:680, label:"어머니와의 첫 대화", palette:'mom', lines:[
+            {speaker:'mom', label:'어머니 장세은', text:"'저... 이거 좀 드세요.'\n\n작은 접시 하나를 조심스레 건넸다. 별것 아닌 그 손짓 하나에, 그의 심장은 완전히 무너져 내렸다."},
+            {speaker:'muse', label:'운명이 맺어지다', text:"2018년 4월 13일.\n\n모이라이 세 여신 중 《클로토》가 새로운 실 하나를 자아냈다.\n두 개의 운명이, 마침내 하나로 엮이기 시작한 순간이었다.\n\n이렇게, 두 사람의 오디세이아가 시작되었다."}
+          ]}
+        ]
+      },
+      travels:{
+        name:"우리의 여행", width:1000, theme:'travel',
+        props:[{type:'palm', x:170},{type:'bench', x:420},{type:'palm', x:670},{type:'lamp', x:880}],
+        exitLeft:'foodstreet', exitRight:'wedding',
+        npcs:[
+          { id:'muse_t1', x:320, label:"우리의 여행 이야기", palette:'muse', lines:[
+            {speaker:'muse', label:'뮤즈의 노래 · 바람의 기억', text:"연인이 된 두 사람은, 계절이 바뀔 때마다 함께 길을 떠났다.\n\n제주도의 푸른 해안도로, 지붕을 활짝 연 오픈카 위로 쏟아지던 햇살 — 그것은 매년 돌아오는 서로의 생일마다 반복된, 그들만의 작은 의식이었다."},
+            {speaker:'muse', label:'뮤즈의 노래 · 한라의 정상', text:"한라산 정상에 올라 함께 내려다본 구름바다.\n\n숨이 턱까지 차올랐지만, 손을 놓지 않고 끝까지 함께 걸었다 — 그것이 두 사람이 사랑하는 방식이었다."},
+            {speaker:'muse', label:'뮤즈의 노래 · 파도 위에서', text:"강원도의 차가운 바다 위, 서투른 몸짓으로 파도를 타던 날들.\n\n몇 번이고 넘어지고 물을 먹으면서도, 두 사람은 마주 보며 웃음을 터뜨렸다."}
+          ]},
+          { id:'photo1', x:730, label:"사진첩", palette:'prop', lines:[
+            {speaker:'dad', label:'아버지 전시현', text:"휴대폰 속에는 어느새 두 사람의 사진이 가득 쌓여 있었다.\n\n'우리, 진짜 많이도 웃었다.'\n\n그 모든 순간들이 모여, 하나의 서사시를 이루고 있었다."}
+          ]}
+        ]
+      },
+      wedding:{
+        name:"결혼식장", width:900, theme:'wedding',
+        props:[{type:'arch', x:420},{type:'flower', x:200},{type:'flower', x:680}],
+        exitLeft:'travels',
+        npcs:[
+          { id:'gma_p1', x:260, label:"할머니의 축복", palette:'grandma', lines:[
+            {speaker:'grandma_p', label:'할머니 유윤재', text:"'우리 아들, 이렇게 좋은 사람을 만났구나.'\n\n주름진 눈가에 눈물이 맺혔다. 아들의 손을 꼭 잡으며, 오래도록 바라던 순간이 왔음을 느꼈다."}
+          ]},
+          { id:'gpa_m1', x:620, label:"외조부모님의 축복", palette:'grandpa', lines:[
+            {speaker:'grandpa_m', label:'외할아버지 장건식 & 외할머니 유재순', text:"'우리 딸, 행복하게 살아라.'\n\n두 사람은 나란히 서서, 딸의 새로운 시작을 축복했다.\n\n모이라이의 실타래는 이렇게 두 집안을 하나로 이었다."}
+          ]}
+        ]
+      }
+    }
+  },
+
+  hospital:{
+    order:['lobby','corridor','delivery','nursery'],
+    cardReward:{ icon:"👶", name:"탄생의 증표", epithet:"에일레이티이아의 문을 통과한 자" },
+    fields:{
+      lobby:{
+        name:"병원 로비 · 안산우성여성병원", width:900, theme:'hospitalIndoor',
+        props:[{type:'plantpot', x:110},{type:'sofa', x:310},{type:'desk', x:560},{type:'plantpot', x:810}],
+        exitRight:'corridor',
+        npcs:[
+          { id:'recep1', x:590, label:"접수처", palette:'nurse', lines:[
+            {speaker:'receptionist', label:'접수처 간호사', text:"'장세은 산모님, 39주 1일차 예정된 제왕절개 맞으실까요?'\n\n'네, 맞아요...' 어머니의 목소리에는 설렘과 긴장이 함께 묻어났다."}
+          ]},
+          { id:'mom_w1', x:260, label:"어머니의 마음", palette:'mom', lines:[
+            {speaker:'mom', label:'어머니 장세은', text:"열 달을 함께한 작은 생명이, 이제 곧 세상 밖으로 나온다.\n\n두려움보다 더 큰 것은, 마침내 만날 수 있다는 벅찬 기대였다."}
+          ]}
+        ]
+      },
+      corridor:{
+        name:"수술 준비실 복도", width:900, theme:'hospitalIndoor',
+        props:[{type:'door', x:160},{type:'plantpot', x:410},{type:'door', x:660}],
+        exitLeft:'lobby', exitRight:'delivery',
+        npcs:[
+          { id:'doc1', x:410, label:"담당 의사 선생님", palette:'doctor', lines:[
+            {speaker:'doctor', label:'담당 의사 선생님', text:"'수술 잘 될 거예요, 걱정 마세요.'\n\n출산의 여신 《에일레이티이아》를 대신하듯, 노련한 손길이 산모를 안심시켰다."}
+          ]},
+          { id:'dad_p1', x:710, label:"아버지의 초조함", palette:'dad', lines:[
+            {speaker:'dad', label:'아버지 전시현', text:"복도를 서성이는 발걸음이 점점 빨라졌다.\n\n'괜찮을 거야, 괜찮을 거야...'\n\n스스로에게 되뇌었지만, 심장은 좀처럼 진정되지 않았다."}
+          ]}
+        ]
+      },
+      delivery:{
+        name:"분만실 · 탄생의 순간", width:900, theme:'delivery',
+        props:[{type:'bed', x:460},{type:'lamp', x:210},{type:'lamp', x:710}],
+        exitLeft:'corridor', exitRight:'nursery',
+        npcs:[
+          { id:'nurse_b1', x:310, label:"탄생의 순간", palette:'nurse', lines:[
+            {speaker:'muse', label:'세상의 첫 빛', text:"오전 10시 15분.\n\n출산의 여신 《에일레이티이아》가 마침내 문을 활짝 열었다.\n3.36kg, 47.5cm — 작은 영웅이 인간 세계에 첫발을 내디뎠다.\n\n그의 첫 울음은 두려움이 아닌, 《존재의 선언》이었다."}
+          ]},
+          { id:'dad_h1', x:660, label:"처음 안아본 순간", palette:'dad', lines:[
+            {speaker:'dad', label:'처음 안아본 순간', text:"손끝이 떨렸다.\n\n세상의 그 어떤 트로피도, 그 어떤 승리도 — 이 작은 무게보다 무겁지 않았다.\n\n'세상을 다 가진 기분이란 게, 이런 거구나.'"}
+          ]}
+        ]
+      },
+      nursery:{
+        name:"신생아실 · 가족의 축복", width:1100, theme:'nursery',
+        props:[{type:'crib', x:160},{type:'window', x:460},{type:'crib', x:760}],
+        exitLeft:'delivery',
+        npcs:[
+          { id:'gma_p2', x:210, label:"할머니의 눈물", palette:'grandma', lines:[
+            {speaker:'grandma_p', label:'할머니 유윤재', text:"'아이고, 우리 강아지...'\n\n작은 손가락을 조심스레 만지며, 할머니의 눈시울이 붉어졌다."}
+          ]},
+          { id:'gpa_m2', x:460, label:"외조부모님의 방문", palette:'grandpa', lines:[
+            {speaker:'grandpa_m', label:'외할아버지 장건식 & 외할머니 유재순', text:"'우리 손주 태어났다는 소식에 한걸음에 달려왔단다.'\n\n두 분의 얼굴에는 이루 말할 수 없는 기쁨이 가득했다."}
+          ]},
+          { id:'gpa_trib1', x:710, label:"하늘의 할아버지", palette:'tribute', lines:[
+            {speaker:'grandpa_tribute', label:'할아버지 전용식 (하늘에서)', text:"비록 이 자리에 함께하지 못했지만, 어딘가 높은 곳에서 따뜻한 눈으로 지켜보고 있었다.\n\n'우리 증손주, 건강하게만 자라다오.'\n\n보이지 않는 곳에서도, 사랑은 늘 함께였다."}
+          ]},
+          { id:'name1', x:960, label:"이름을 얻다", palette:'muse', lines:[
+            {speaker:'muse', label:'이름을 얻는 신탁', text:"두 사람이 아이를 내려다보며 속삭였다.\n\n'이안아.'\n\n《기쁘고 평안하라》는 뜻을 담은 이름 — 영문으로는 《Ian》.\n\n신탁처럼 내려진 그 이름과 함께, 작은 영웅은 세상에서 유일한 존재가 되었다."}
+          ]}
+        ]
+      }
+    }
   }
 };
 
-/* --- Chapter 4: 에일레이티이아의 문 (자궁 속 + 병원, 이안이 시점) --- */
+/* --- 자궁 속 여정 (챕터4 전반부, 물속 플랫포머) --- */
 const PLATFORMER = {
-  length: 2600, groundY: 300,
-  enemies: [
-    { x:420, range:60, alive:true }, { x:800, range:50, alive:true },
-    { x:1250, range:70, alive:true }, { x:1700, range:60, alive:true }, { x:2100, range:50, alive:true }
+  length: 3000, groundY: 300,
+  enemies:[
+    {x:300,range:60,alive:true},{x:700,range:50,alive:true},{x:1100,range:70,alive:true},
+    {x:1500,range:60,alive:true},{x:1900,range:50,alive:true},{x:2300,range:60,alive:true},{x:2700,range:55,alive:true}
   ],
-  blocks: [
-    { x:300, msg:"어머니의 심장 소리, 태초의 북소리처럼 늘 함께했다.", used:false },
-    { x:650, msg:"아버지의 목소리가 물결 너머로 다정하게 들려왔다.", used:false },
-    { x:1050, msg:"'찰떡이'라 불리며, 이미 사랑받고 있었다.", used:false },
-    { x:1500, msg:"평온한 열 달 — 폭풍 없는 항해였다.", used:false },
-    { x:1950, msg:"머나먼 땅, 후쿠오카의 파도가 함께 흔들렸다.", used:false },
-    { x:2350, msg:"드디어, 태초의 바다를 벗어날 시간이다.", used:false }
+  blocks:[
+    {x:250, msg:"덜컥 찾아온 입덧, 그래도 매일 감사했던 열 달의 시작.", used:false},
+    {x:550, msg:"콩닥콩닥, 어머니의 심장 소리는 태초의 북소리처럼 늘 함께했다.", used:false},
+    {x:850, msg:"작은 초음파 사진 속, 꼬물거리는 손과 발을 처음 만났다.", used:false},
+    {x:1150, msg:"'찰떡이'라 불리며, 태어나기도 전에 이미 사랑받고 있었다.", used:false},
+    {x:1450, msg:"톡, 톡 — 태동이 느껴질 때마다 온 가족이 배에 손을 얹었다.", used:false},
+    {x:1750, msg:"머나먼 후쿠오카, 함께 걸었던 태교여행의 바닷바람을 기억한다.", used:false},
+    {x:2050, msg:"아버지의 목소리가 물결 너머로 다정하게 들려왔다.", used:false},
+    {x:2350, msg:"평온한 열 달, 폭풍 없는 항해였다 — 이제 곧 항구에 닿는다.", used:false},
+    {x:2650, msg:"드디어, 태초의 바다를 벗어날 시간이다.", used:false}
   ]
 };
-TOPDOWN_LEVELS.hospital = {
-  name:"에일레이티이아의 신전 · 안산우성여성병원", chIndex:"04", bgImage: ASSETS.hospitalBg, characterType:"baby", theme:"indoor",
-  walls:[
-    {x1:6,y1:0,x2:6,y2:2},{x1:6,y1:5,x2:6,y2:7},
-    {x1:9,y1:0,x2:9,y2:2},{x1:9,y1:5,x2:9,y2:7},
-    {x1:9,y1:4,x2:10,y2:4},{x1:13,y1:4,x2:15,y2:4}
-  ],
-  props:[
-    {x:1,y:0.3,icon:"🪴"},{x:15,y:0.3,icon:"🪴"},{x:1,y:7.5,icon:"🛋️"},{x:7,y:2.3,icon:"🖼️"},{x:12,y:7.5,icon:"🧸"}
-  ],
-  start:{x:2,y:6},
-  missions:[
-    { id:1, x:2, y:1, speaker:"ian", label:"흐릿한 첫 빛",
-      text:"눈을 뜨자, 세계는 온통 눈부신 빛의 소용돌이였다.\n\n낯선 온도, 낯선 공기 — 그러나 두렵지 않았다.\n어디선가, 태초부터 알고 있던 두 목소리가 떨리며 들려왔기 때문이다." },
-    { id:2, x:7, y:6, speaker:"mom", label:"들려오는 심장 소리",
-      text:"'우리 아가...'\n\n나는 조심스레 그를 품에 안았다.\n열 달 내내 들려주었던 그 심장 소리를, 이제는 내 품 안에서 직접 들려줄 차례였다." },
-    { id:3, x:12, y:1, speaker:"muse", label:"세상의 첫 빛",
-      text:"오전 10시 15분.\n\n출산의 여신 《에일레이티이아》가 마침내 문을 활짝 열었다.\n3.36kg, 47.5cm — 작은 영웅이 인간 세계에 첫발을 내디뎠다.\n\n그의 첫 울음은 두려움이 아닌, 《존재의 선언》이었다." },
-    { id:4, x:12, y:5, speaker:"dad", label:"처음 안아본 순간",
-      text:"손끝이 떨렸다.\n\n세상의 그 어떤 트로피도, 그 어떤 승리도 — 이 작은 무게보다 무겁지 않았다.\n\n'세상을 다 가진 기분이란 게, 이런 거구나.'" },
-    { id:5, x:14, y:6, speaker:"muse", label:"이름을 얻는 신탁",
-      text:"두 사람이 아이를 내려다보며 속삭였다.\n\n'이안아.'\n\n《기쁘고 평안하라》는 뜻을 담은 이름 — 신탁처럼 내려진 그 이름과 함께, 작은 영웅은 세상에서 유일한 존재가 되었다." }
-  ],
-  cardReward:{ icon:"👶", name:"탄생의 증표", epithet:"에일레이티이아의 문을 통과한 자" }
-};
 /* ============================================================
-   ✏️ CONFIG 끝. 아래는 게임 엔진입니다.
+   ✏️ CONFIG 끝
    ============================================================ */
-
 document.getElementById('dday').textContent = (()=>{ const d=Math.floor((new Date()-new Date(birthDate))/86400000); return d>=0?d:0; })();
 
-/* 타이틀 배경 별 */
 (function initStars(){
   const scr = document.getElementById('screen-title');
   for(let i=0;i<40;i++){
@@ -332,7 +457,7 @@ document.getElementById('dday').textContent = (()=>{ const d=Math.floor((new Dat
   }
 })();
 
-/* ---------------- 사운드 (Web Audio 합성) ---------------- */
+/* ---------------- 사운드 ---------------- */
 let audioCtx=null, soundOn=true;
 function ensureAudio(){ if(!audioCtx){ try{ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } }
 function beep(freq=440, dur=0.1, type='sine', vol=0.2, delay=0){
@@ -351,12 +476,11 @@ function sfxStep(){ beep(220+Math.random()*30,0.03,'square',0.045); }
 function sfxHit(){ beep(160,0.15,'sawtooth',0.12); }
 function sfxType(){ beep(1000+Math.random()*200,0.02,'square',0.03); }
 function toggleMute(){ soundOn=!soundOn; document.getElementById('muteBtn').textContent = soundOn?'🔊':'🔇'; if(soundOn) beep(660,0.08,'sine',0.15); }
-
 function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.style.opacity=1; setTimeout(()=>t.style.opacity=0, 1800); }
 
 /* ---------------- 화면 전환 ---------------- */
 function enterMap(){ ensureAudio(); document.getElementById('screen-title').style.display='none'; document.getElementById('screen-map').style.display='flex'; renderWorldMap(); }
-function backToMap(){ document.getElementById('screen-game').style.display='none'; document.getElementById('screen-map').style.display='flex'; }
+function backToMap(){ mode=null; pendingAction=null; document.getElementById('actionBtn').style.display='none'; document.getElementById('screen-game').style.display='none'; document.getElementById('screen-map').style.display='flex'; }
 
 function renderWorldMap(){
   const area = document.getElementById('worldMapArea');
@@ -394,7 +518,7 @@ function launchChapter(ch){
   document.getElementById('screen-game').style.display='flex';
   showChapterIntro(ch.id, ch.title, ch.myth || ch.subtitle, ()=>{
     if(ch.launch==='birth'){ startBirthIntro(); }
-    else { startTopdown(ch.launch); }
+    else { startField(ch.launch); }
   });
 }
 function showChapterIntro(num, title, myth, cb){
@@ -409,15 +533,21 @@ function showChapterIntro(num, title, myth, cb){
 /* ---------------- 캔버스 & 전역 ---------------- */
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
-let mode=null, globalT=0;
+let mode=null, globalT=0, pendingAction=null;
+const FIELD_GROUND_Y = 320;
 
-/* ---------------- ⭐ JRPG 대화 시스템 ---------------- */
+function setAction(label, fn){ pendingAction=fn; const b=document.getElementById('actionBtn'); b.innerHTML=label; b.style.display='flex'; }
+function clearAction(){ pendingAction=null; document.getElementById('actionBtn').style.display='none'; }
+document.getElementById('actionBtn').addEventListener('click', ()=>{ if(pendingAction) pendingAction(); });
+
+/* ---------------- JRPG 대화 시스템 ---------------- */
 let typeInterval=null, typeFullText='', dialogueQueue=[], dialogueOnComplete=null;
 
 function showDialogue(missionOrList, onComplete){
   dialogueQueue = Array.isArray(missionOrList) ? [...missionOrList] : [missionOrList];
   dialogueOnComplete = onComplete;
   document.getElementById('dialogueOverlay').style.display='flex';
+  document.getElementById('actionBtn').style.display='none';
   playNextDialogue();
 }
 function playNextDialogue(){
@@ -427,29 +557,26 @@ function playNextDialogue(){
     return;
   }
   const line = dialogueQueue.shift();
-  const p = PORTRAITS[line.speaker] || PORTRAITS.muse;
+  const p = PORTRAITS[line.speaker] || {emoji:'💬', name:line.speaker, img:''};
   document.getElementById('speakerName').textContent = line.label ? (p.name.split(' · ')[0] + ' — ' + line.label) : p.name;
   const img = document.getElementById('portraitImg');
-  if(p.img){ img.src = p.img; img.style.display='block'; img.onerror=()=>{ img.style.display='none'; }; }
-  else { img.style.display='none'; }
-  document.getElementById('portraitWrap').dataset.emoji = p.emoji;
+  const fb = document.getElementById('portraitFallback');
+  if(p.img){
+    img.src = p.img; img.style.display='block'; fb.style.display='none';
+    img.onerror=()=>{ img.style.display='none'; fb.style.display='flex'; fb.textContent=p.emoji; };
+  } else { img.style.display='none'; fb.style.display='flex'; fb.textContent=p.emoji; }
   typewriterText(line.text.replace(/《([^》]+)》/g,'<span class="em">$1</span>'));
 }
 function typewriterText(html, speed=22){
   const el = document.getElementById('dialogueText');
   clearInterval(typeInterval); el.innerHTML=''; typeFullText=html;
   const plain = html.replace(/<[^>]+>/g,'');
-  let i=0;
-  el.innerHTML='';
-  const raw = html;
+  let i=0; const raw = html;
   typeInterval = setInterval(()=>{
     el.textContent = plain.slice(0, i+1);
     if(i%3===0) sfxType();
     i++;
-    if(i>=plain.length){
-      clearInterval(typeInterval);
-      el.innerHTML = raw;
-    }
+    if(i>=plain.length){ clearInterval(typeInterval); el.innerHTML = raw; }
   }, speed);
 }
 document.getElementById('dialogueBox').addEventListener('click', ()=>{
@@ -457,7 +584,7 @@ document.getElementById('dialogueBox').addEventListener('click', ()=>{
   else { playNextDialogue(); }
 });
 
-/* ---------------- 캐릭터 드로잉 (그림자 없음, 방향/눈깜빡임/숨쉬기 포함) ---------------- */
+/* ---------------- 캐릭터 드로잉 ---------------- */
 function drawWalkerSide(cx, cy, moving, jumping, t, facingRight){
   const legSwing = moving ? Math.sin(t*0.35)*10 : 0;
   const blink = (Math.floor(t/40)%9===0);
@@ -465,32 +592,12 @@ function drawWalkerSide(cx, cy, moving, jumping, t, facingRight){
   ctx.fillStyle = '#f4c9a0';
   if(jumping){ ctx.fillRect(-9, 6, 7, 10); ctx.fillRect(2, 6, 7, 10); }
   else { ctx.fillRect(-9+legSwing*0.3, 8, 7, 12+Math.abs(legSwing)*0.3); ctx.fillRect(2-legSwing*0.3, 8, 7, 12-Math.abs(legSwing)*0.3); }
-  ctx.fillStyle = '#ffd9e6'; ctx.beginPath(); ctx.ellipse(0, 0, 15, 16, 0, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#5a7ab0'; ctx.beginPath(); ctx.ellipse(0, 0, 15, 16, 0, 0, Math.PI*2); ctx.fill();
   ctx.fillStyle = '#ffe3c4'; ctx.beginPath(); ctx.arc(0, -20, 13, 0, Math.PI*2); ctx.fill();
-  ctx.fillStyle='#ff9ecb'; ctx.beginPath(); ctx.arc(6,-17,2.5,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#3a2a20'; ctx.beginPath(); ctx.arc(0,-25,12,Math.PI,0); ctx.fill();
   ctx.fillStyle='#4a3f55';
   if(blink){ ctx.fillRect(2.5,-21.3,3,1); ctx.fillRect(-5.5,-21.3,3,1); }
   else { ctx.beginPath(); ctx.arc(4,-21,1.6,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(-3,-21,1.6,0,Math.PI*2); ctx.fill(); }
-  ctx.restore();
-}
-function drawWalkerTop(cx, cy, moving, t, dir){
-  const legSwing = moving ? Math.sin(t*0.3)*7 : 0;
-  const bob = moving ? Math.abs(Math.sin(t*0.3))*2 : Math.sin(t*0.05)*1;
-  const blink = (Math.floor(t/45)%8===0);
-  ctx.save(); ctx.translate(cx, cy - bob);
-  if(dir==='left') ctx.scale(-1,1);
-  ctx.fillStyle = '#5a4a7a'; ctx.fillRect(-8+legSwing*0.4, 8, 6, 12); ctx.fillRect(2-legSwing*0.4, 8, 6, 12);
-  ctx.fillStyle = '#f4c9a0'; ctx.fillRect(-14-legSwing*0.2, -2, 5, 12); ctx.fillRect(9+legSwing*0.2, -2, 5, 12);
-  ctx.fillStyle = '#8a6fb0'; ctx.beginPath(); ctx.roundRect(-11, -8, 22, 20, 6); ctx.fill();
-  ctx.fillStyle = '#ffe3c4'; ctx.beginPath(); ctx.arc(0, -18, 11, 0, Math.PI*2); ctx.fill();
-  if(dir==='up'){
-    ctx.fillStyle='#3a2a20'; ctx.beginPath(); ctx.arc(0,-18,11,0,Math.PI*2); ctx.fill();
-  } else {
-    ctx.fillStyle='#3a2a20'; ctx.beginPath(); ctx.arc(0,-24,9,Math.PI,0); ctx.fill();
-    ctx.fillStyle='#4a3f55';
-    if(blink){ ctx.fillRect(2,-18.5,3,1); ctx.fillRect(-5,-18.5,3,1); }
-    else { ctx.beginPath(); ctx.arc(4,-18,1.5,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(-4,-18,1.5,0,Math.PI*2); ctx.fill(); }
-  }
   ctx.restore();
 }
 function drawBabyFloat(cx, cy, moving, t){
@@ -511,28 +618,164 @@ function drawBabyFloat(cx, cy, moving, t){
   else { ctx.beginPath(); ctx.arc(3.5,-15,2.2,0.2,Math.PI-0.2); ctx.stroke(); ctx.beginPath(); ctx.arc(-3.5,-15,2.2,0.2,Math.PI-0.2); ctx.stroke(); }
   ctx.restore();
 }
+function drawNPC(cx, groundY, t, pal, done){
+  const bob = Math.sin(t*0.05+cx)*1.5;
+  ctx.save(); ctx.translate(cx, groundY-2+bob);
+  if(pal.glow){
+    const g = ctx.createRadialGradient(0,-20,4,0,-20,40);
+    g.addColorStop(0,'rgba(255,240,200,0.5)'); g.addColorStop(1,'rgba(255,240,200,0)');
+    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(0,-20,40,0,Math.PI*2); ctx.fill();
+  }
+  ctx.fillStyle = pal.cloth2; ctx.fillRect(-8,8,7,14); ctx.fillRect(2,8,7,14);
+  ctx.fillStyle = pal.cloth;
+  ctx.beginPath(); ctx.moveTo(-11,8); ctx.lineTo(11,8); ctx.lineTo(9,-14); ctx.lineTo(-9,-14); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = pal.skin; ctx.beginPath(); ctx.arc(0,-22,12,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = pal.hair; ctx.beginPath(); ctx.arc(0,-27,12,Math.PI,0); ctx.fill();
+  ctx.fillStyle='#4a3f55'; ctx.beginPath(); ctx.arc(4,-22,1.4,0,Math.PI*2); ctx.arc(-4,-22,1.4,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+  const by = groundY-2+bob-46+Math.sin(t*0.08)*3;
+  ctx.font='bold 18px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  if(done){
+    ctx.fillStyle='rgba(127,209,185,0.9)'; ctx.beginPath(); ctx.arc(cx,by,11,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#1b1f4b'; ctx.fillText('✓', cx, by+1);
+  } else {
+    ctx.fillStyle='rgba(255,224,120,0.95)'; ctx.beginPath(); ctx.arc(cx,by,11,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#5a4010'; ctx.fillText('!', cx, by+1);
+  }
+}
 
-/* ---------------- 발밑 먼지 파티클 ---------------- */
+/* ---------------- 배경 소품 (정교한 캔버스 드로잉) ---------------- */
+const THEME_SKY = {
+  street:['#bcdcf5','#eaf6ff'], alley:['#9cb8d8','#dbe8f0'], foodstreet:['#d89860','#f5d9a8'],
+  travel:['#7ec8e3','#cdeffa'], wedding:['#ffe0ec','#fff8f0'],
+  hospitalIndoor:['#f3ece0','#fffaf2'], delivery:['#ffe9d0','#fff6e8'], nursery:['#e8f0ff','#f8fbff']
+};
+function drawFieldBg(theme){
+  const sky = THEME_SKY[theme]||['#bcdcf5','#eaf6ff'];
+  const g = ctx.createLinearGradient(0,0,0,FIELD_GROUND_Y);
+  g.addColorStop(0, sky[0]); g.addColorStop(1, sky[1]);
+  ctx.fillStyle=g; ctx.fillRect(0,0,canvas.width,FIELD_GROUND_Y);
+  const isIndoor = theme==='hospitalIndoor'||theme==='delivery'||theme==='nursery';
+  ctx.fillStyle = isIndoor ? '#e8dcc8' : '#7a9a5a';
+  ctx.fillRect(0,FIELD_GROUND_Y,canvas.width,canvas.height-FIELD_GROUND_Y);
+  ctx.strokeStyle='rgba(0,0,0,0.15)'; ctx.beginPath(); ctx.moveTo(0,FIELD_GROUND_Y); ctx.lineTo(canvas.width,FIELD_GROUND_Y); ctx.stroke();
+}
+function drawProp(type,x,camX,w,h,color){
+  const sx = x-camX, groundY=FIELD_GROUND_Y;
+  if(sx<-160||sx>canvas.width+160) return;
+  switch(type){
+    case 'building':{
+      const bw=w||160, bh=h||200;
+      ctx.fillStyle=color||'#b89968'; ctx.fillRect(sx-bw/2, groundY-bh, bw, bh);
+      ctx.fillStyle='rgba(255,255,255,0.28)';
+      for(let r=0;r<Math.floor(bh/45);r++) for(let c=0;c<Math.floor(bw/40);c++){
+        ctx.fillRect(sx-bw/2+10+c*40, groundY-bh+14+r*45, 22, 26);
+      }
+      break;
+    }
+    case 'tree':{
+      ctx.fillStyle='#7a5a3a'; ctx.fillRect(sx-5, groundY-50, 10, 50);
+      ctx.fillStyle='#5a9a5a'; ctx.beginPath(); ctx.arc(sx, groundY-70, 32, 0, Math.PI*2); ctx.fill();
+      break;
+    }
+    case 'palm':{
+      ctx.fillStyle='#8a7248'; ctx.fillRect(sx-4, groundY-70, 8, 70);
+      ctx.fillStyle='#4a9a5a';
+      for(let i=0;i<5;i++){ ctx.save(); ctx.translate(sx,groundY-70); ctx.rotate(i*(Math.PI*2/5)); ctx.beginPath(); ctx.ellipse(20,0,22,8,0,0,Math.PI*2); ctx.fill(); ctx.restore(); }
+      break;
+    }
+    case 'lamp':{
+      ctx.fillStyle='#3a3a3a'; ctx.fillRect(sx-3, groundY-90, 6, 90);
+      const g=ctx.createRadialGradient(sx,groundY-95,2,sx,groundY-95,30);
+      g.addColorStop(0,'rgba(255,230,150,0.8)'); g.addColorStop(1,'rgba(255,230,150,0)');
+      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(sx,groundY-95,30,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='#ffe27a'; ctx.beginPath(); ctx.arc(sx,groundY-95,8,0,Math.PI*2); ctx.fill();
+      break;
+    }
+    case 'cart':{
+      ctx.fillStyle='#c94a4a'; ctx.fillRect(sx-30,groundY-70,60,15);
+      ctx.fillStyle='#e8d8a0'; ctx.fillRect(sx-26,groundY-55,52,35);
+      ctx.fillStyle='#3a3a3a'; ctx.beginPath(); ctx.arc(sx-16,groundY-18,6,0,Math.PI*2); ctx.arc(sx+16,groundY-18,6,0,Math.PI*2); ctx.fill();
+      break;
+    }
+    case 'bench':{
+      ctx.fillStyle='#8a6238'; ctx.fillRect(sx-25,groundY-20,50,6); ctx.fillRect(sx-25,groundY-6,6,6); ctx.fillRect(sx+19,groundY-6,6,6);
+      break;
+    }
+    case 'plant':{
+      ctx.fillStyle='#a86a3a'; ctx.fillRect(sx-10,groundY-18,20,18);
+      ctx.fillStyle='#4a9a5a'; ctx.beginPath(); ctx.arc(sx,groundY-28,16,0,Math.PI*2); ctx.fill();
+      break;
+    }
+    case 'plantpot':{
+      ctx.fillStyle='#a86a3a'; ctx.fillRect(sx-10,groundY-18,20,18);
+      ctx.fillStyle='#4a9a5a'; ctx.beginPath(); ctx.arc(sx,groundY-28,16,0,Math.PI*2); ctx.fill();
+      break;
+    }
+    case 'sofa':{ ctx.fillStyle='#8a6fb0'; ctx.fillRect(sx-30,groundY-28,60,28); break; }
+    case 'desk':{ ctx.fillStyle='#c9a876'; ctx.fillRect(sx-35,groundY-30,70,30); break; }
+    case 'door':{
+      ctx.fillStyle='#8a6238'; ctx.fillRect(sx-16,groundY-70,32,70);
+      ctx.fillStyle='#ffe27a'; ctx.beginPath(); ctx.arc(sx+10,groundY-35,2,0,Math.PI*2); ctx.fill();
+      break;
+    }
+    case 'window':{
+      ctx.fillStyle='rgba(180,220,250,0.7)'; ctx.fillRect(sx-25,groundY-90,50,40);
+      ctx.strokeStyle='#fff'; ctx.strokeRect(sx-25,groundY-90,50,40);
+      break;
+    }
+    case 'crib':{
+      ctx.fillStyle='#fff2e0'; ctx.fillRect(sx-25,groundY-35,50,30);
+      ctx.strokeStyle='#d8c8a0'; ctx.lineWidth=2;
+      for(let i=0;i<6;i++){ ctx.beginPath(); ctx.moveTo(sx-25+i*10,groundY-35); ctx.lineTo(sx-25+i*10,groundY-5); ctx.stroke(); }
+      break;
+    }
+    case 'bed':{
+      ctx.fillStyle='#fff'; ctx.fillRect(sx-45,groundY-30,90,25);
+      ctx.fillStyle='#a8d8ff'; ctx.fillRect(sx-45,groundY-30,90,8);
+      break;
+    }
+    case 'flower':{
+      ctx.fillStyle='#4a9a5a'; ctx.fillRect(sx-2,groundY-20,4,20);
+      ['#ff9ecb','#ffe27a','#a8d8ff'].forEach((c,i)=>{ ctx.fillStyle=c; ctx.beginPath(); ctx.arc(sx+(i-1)*6,groundY-24,5,0,Math.PI*2); ctx.fill(); });
+      break;
+    }
+    case 'arch':{
+      ctx.strokeStyle='#fff8e0'; ctx.lineWidth=8;
+      ctx.beginPath(); ctx.arc(sx,groundY-40,60,Math.PI,0); ctx.stroke();
+      ctx.fillStyle='#ff9ecb';
+      for(let i=0;i<8;i++){ const ang=Math.PI+i*(Math.PI/7); ctx.beginPath(); ctx.arc(sx+Math.cos(ang)*60,groundY-40+Math.sin(ang)*60,5,0,Math.PI*2); ctx.fill(); }
+      break;
+    }
+  }
+}
+function drawExitHints(field, camX){
+  ctx.font='26px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  if(field.exitLeft){ const sx=10-camX; if(sx>-30&&sx<canvas.width+30){ ctx.fillStyle='rgba(255,255,255,0.9)'; ctx.fillText('◀', Math.max(16,sx), canvas.height/2); } }
+  if(field.exitRight){ const sx=field.width-10-camX; if(sx>-30&&sx<canvas.width+30){ ctx.fillStyle='rgba(255,255,255,0.9)'; ctx.fillText('▶', Math.min(canvas.width-16,sx), canvas.height/2); } }
+}
+
+/* ---------------- 먼지 파티클 ---------------- */
 let dust=[];
 function spawnDust(x,y){ dust.push({x,y,life:18,r:3+Math.random()*2}); }
 function updateDust(){ dust.forEach(d=>{d.life--; d.y-=0.3;}); dust=dust.filter(d=>d.life>0); }
 function drawDust(camX=0){ dust.forEach(d=>{ ctx.beginPath(); ctx.arc(d.x-camX,d.y,d.r,0,Math.PI*2); ctx.fillStyle='rgba(255,255,255,'+(d.life/18*0.4)+')'; ctx.fill(); }); }
 
 /* =========================================================
-   PLATFORMER (자궁 속 = 태초의 바다) — Chapter 4 전용 인트로
+   PLATFORMER (자궁 속 여정)
    ========================================================= */
 const GRAVITY=0.7, JUMP_FORCE=-13, MOVE_SPEED=3.2;
 let pf, inputLeft=false, inputRight=false, jumpQueued=false, particles=[], bubbles=[];
 
 function startBirthIntro(){
-  mode='platform';
+  mode='platform'; pendingAction=null;
   document.getElementById('marioHud').style.display='flex';
   document.getElementById('nexusTop').style.display='none';
   document.getElementById('nexusLog').style.display='none';
   document.getElementById('missionList').style.display='none';
   document.getElementById('jumpBtn').style.display='flex';
   document.getElementById('joyBase').style.display='block';
-  document.getElementById('actionBtn').style.display='none';
+  clearAction();
   canvas.width=720; canvas.height=360;
   pf = { worldX:60, y:PLATFORMER.groundY, vy:0, vx:0, grounded:true, facingRight:true, t:0, lightScore:0 };
   particles=[]; dust=[]; PLATFORMER.blocks.forEach(b=>b.used=false); PLATFORMER.enemies.forEach(e=>e.alive=true);
@@ -540,6 +783,7 @@ function startBirthIntro(){
   document.getElementById('lightScore').textContent='000';
 }
 function pfUpdate(){
+  if(document.getElementById('dialogueOverlay').style.display==='flex') return;
   pf.t++; globalT++;
   pf.vx = 0;
   if(inputLeft){ pf.vx=-MOVE_SPEED; pf.facingRight=false; }
@@ -581,10 +825,8 @@ function pfUpdate(){
   document.getElementById('progressPct').textContent = Math.min(100, Math.round(pf.worldX/PLATFORMER.length*100))+'%';
 
   if(pf.worldX>=PLATFORMER.length){
-    document.getElementById('actionBtn').style.display='flex';
-    document.getElementById('actionBtn').innerHTML='🌟<br>세상으로';
-    document.getElementById('actionBtn').onclick = ()=>{ sfxClear(); triggerBirth(); document.getElementById('actionBtn').style.display='none'; };
-  }
+    setAction('🌟<br>세상으로', ()=>{ sfxClear(); triggerBirth(); clearAction(); });
+  } else { clearAction(); }
 }
 function spawnFloatMsg(msg){
   const div=document.createElement('div');
@@ -645,129 +887,115 @@ function triggerBirth(){
 function startBabyHospital(){
   document.getElementById('birthText').style.display='none';
   document.getElementById('birthFlash').style.opacity=0;
-  startTopdown('hospital');
+  startField('hospital');
 }
 
 /* =========================================================
-   TOPDOWN (탑뷰 공용 엔진) — Chapter 1 / Chapter 4(병원) 공용
+   FIELD ENGINE (메이플식 사이드뷰 마을/실내 탐험)
    ========================================================= */
-const TILE=45, MAP_W=16, MAP_H=8;
-let currentLevel=null, td, hVel={x:0,y:0}, completed=[], nearMission=null, imgLevelBg=null;
+let currentChapterKey=null, currentFieldId=null, fieldState=null, talked=[];
+let hVel={x:0,y:0};
 
-function startTopdown(key){
-  mode='topdown'; currentLevel = TOPDOWN_LEVELS[key];
-  completed = JSON.parse(sessionStorage.getItem('missionsDone_'+key)||'[]');
+function chapterTotalNpc(key){ const ch=CHAPTER_FIELDS[key]; return ch.order.reduce((s,fid)=> s+ch.fields[fid].npcs.length, 0); }
+
+function startField(chapterKey, fieldId, spawnSide){
+  mode='field'; pendingAction=null;
+  currentChapterKey = chapterKey;
+  const chData = CHAPTER_FIELDS[chapterKey];
+  currentFieldId = fieldId || chData.order[0];
+  const field = chData.fields[currentFieldId];
+  talked = JSON.parse(sessionStorage.getItem('talked_'+chapterKey)||'[]');
+  canvas.width=720; canvas.height=400;
   document.getElementById('marioHud').style.display='none';
   document.getElementById('jumpBtn').style.display='none';
   document.getElementById('nexusTop').style.display='flex';
   document.getElementById('nexusLog').style.display='block';
   document.getElementById('missionList').style.display='flex';
   document.getElementById('joyBase').style.display='block';
-  document.getElementById('nexusTitle').textContent = (currentLevel.characterType==='baby'?'🏛️ ':'🏹 ') + currentLevel.name;
-  document.getElementById('nexusLog').innerHTML = currentLevel.characterType==='baby'
-    ? '<b style="color:#ffe27a;">[이안이의 시점]</b> 아직 눈도 제대로 못 뜨지만, 조금씩 세상을 느껴봅니다. 방향키로 둥실둥실 이동해보세요.'
-    : '<b style="color:#ffe27a;">[TIP]</b> 방향키(←→↑↓)로 이동하고, 미션 위치에서 ❗버튼을 눌러 이야기를 확인하세요.';
-  canvas.width = MAP_W*TILE; canvas.height = MAP_H*TILE;
-  imgLevelBg = null;
-  if(currentLevel.bgImage){ imgLevelBg = new Image(); imgLevelBg.src = currentLevel.bgImage; }
-  td = { x: currentLevel.start.x*TILE+TILE/2, y: currentLevel.start.y*TILE+TILE/2, speed: currentLevel.characterType==='baby'?2.0:2.6, t:0, dir:'down' };
-  hVel = {x:0,y:0}; dust=[];
-  document.getElementById('heartFill').style.width = (30+completed.length*14)+'%';
-  document.getElementById('thrillFill').style.width = (20+completed.length*16)+'%';
-  renderMissionList();
+  clearAction();
+  fieldState = { x: spawnSide==='right'? field.width-60 : 60, t:0, moving:false, facingRight: spawnSide!=='right' };
+  hVel={x:0,y:0}; dust=[];
+  updateFieldUI();
   if(!window._snowStarted){ window._snowStarted=true; setInterval(spawnSnow, 500); }
 }
-function isWall(px,py){
-  const tx=Math.floor(px/TILE), ty=Math.floor(py/TILE);
-  if(tx<0||ty<0||tx>=MAP_W||ty>=MAP_H) return true;
-  for(const w of currentLevel.walls){ if(tx>=w.x1&&tx<=w.x2&&ty>=w.y1&&ty<=w.y2) return true; }
-  return false;
+function updateFieldUI(){
+  const chData = CHAPTER_FIELDS[currentChapterKey];
+  const field = chData.fields[currentFieldId];
+  const total = chapterTotalNpc(currentChapterKey);
+  document.getElementById('nexusTitle').textContent = (currentChapterKey==='hospital'?'🏛️ ':'🏹 ') + field.name + ` (${talked.length}/${total})`;
+  document.getElementById('nexusLog').innerHTML = currentChapterKey==='hospital'
+    ? '<b style="color:#ffe27a;">[이안이의 시점]</b> 방향키 또는 조이스틱으로 이동하고, ❗ 근처에서 상호작용 버튼을 눌러보세요.'
+    : '<b style="color:#ffe27a;">[TIP]</b> 좌우로 이동해 마을을 탐험하고, 화면 끝에서 다음 장소로 이동할 수 있어요.';
+  document.getElementById('heartFill').style.width = Math.min(100, 20+talked.length*(80/total))+'%';
+  document.getElementById('thrillFill').style.width = Math.min(100, 15+talked.length*(85/total))+'%';
+  document.getElementById('missionList').innerHTML = field.npcs.map(n=>
+    `<span class="m-tag ${talked.includes(n.id)?'done':''}">${talked.includes(n.id)?'✅':'▫️'} ${n.label}</span>`
+  ).join('');
 }
-function tdUpdate(){
-  td.t++; globalT++;
-  const nx=td.x+hVel.x*td.speed, ny=td.y+hVel.y*td.speed;
-  if(hVel.x<-0.2) td.dir='left'; else if(hVel.x>0.2) td.dir='right'; else if(hVel.y<-0.2) td.dir='up'; else if(hVel.y>0.2) td.dir='down';
-  const moving = (hVel.x!==0||hVel.y!==0);
-  if(moving && td.t%12===0){ spawnDust(td.x, td.y+16); if(currentLevel.characterType!=='baby') sfxStep(); }
-  if(!isWall(nx,td.y)) td.x=nx;
-  if(!isWall(td.x,ny)) td.y=ny;
+function fieldUpdate(){
+  if(document.getElementById('dialogueOverlay').style.display==='flex') return;
+  globalT++; fieldState.t++;
+  const chData = CHAPTER_FIELDS[currentChapterKey];
+  const field = chData.fields[currentFieldId];
+  const speed = currentChapterKey==='hospital' ? 2.2 : 2.8;
+  const moveX = hVel.x*speed;
+  fieldState.moving = Math.abs(hVel.x)>0.15;
+  if(hVel.x<-0.15) fieldState.facingRight=false; else if(hVel.x>0.15) fieldState.facingRight=true;
+  fieldState.x = Math.max(20, Math.min(field.width-20, fieldState.x+moveX));
+  if(fieldState.moving && fieldState.t%12===0){ spawnDust(fieldState.x, FIELD_GROUND_Y+4); if(currentChapterKey!=='hospital') sfxStep(); }
   updateDust();
-  nearMission=null;
-  for(const m of currentLevel.missions){
-    if(completed.includes(m.id)) continue;
-    const mx=m.x*TILE+TILE/2, my=m.y*TILE+TILE/2;
-    if(Math.hypot(td.x-mx, td.y-my)<32){ nearMission=m; break; }
-  }
-  document.getElementById('actionBtn').style.display = nearMission?'flex':'none';
-  if(nearMission) document.getElementById('actionBtn').innerHTML = currentLevel.characterType==='baby' ? '❗<br>느껴보기' : '❗<br>상호작용';
-}
-function tdDraw(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  if(imgLevelBg && imgLevelBg.complete){ ctx.drawImage(imgLevelBg,0,0,canvas.width,canvas.height); }
-  else {
-    const isStreet = currentLevel.theme==='street';
-    for(let x=0;x<MAP_W;x++)for(let y=0;y<MAP_H;y++){
-      if(isStreet){
-        const roadRow = (y===3||y===4);
-        ctx.fillStyle = roadRow ? ((x+y)%2===0?'#c9beb0':'#c2b7a8') : ((x+y)%2===0?'#dff0d8':'#d5e8cc');
-      } else {
-        ctx.fillStyle=(x+y)%2===0?'#f3e9d8':'#ede0cc';
-      }
-      ctx.fillRect(x*TILE,y*TILE,TILE,TILE);
-    }
-    ctx.fillStyle='#8a6238';
-    currentLevel.walls.forEach(w=> ctx.fillRect(w.x1*TILE,w.y1*TILE,(w.x2-w.x1+1)*TILE,(w.y2-w.y1+1)*TILE));
-  }
-  if(currentLevel.props){
-    currentLevel.props.forEach(p=>{
-      ctx.font='26px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
-      ctx.fillText(p.icon, p.x*TILE+TILE/2, p.y*TILE+TILE/2);
-    });
-  }
-  currentLevel.missions.forEach(m=>{
-    const mx=m.x*TILE+TILE/2, my=m.y*TILE+TILE/2, done=completed.includes(m.id);
-    const bounce = done?0:Math.sin((globalT+m.id*30)*0.06)*4;
-    const pulse = done?18:18+Math.sin(globalT*0.08)*2;
-    ctx.beginPath(); ctx.arc(mx,my+bounce,pulse,0,Math.PI*2);
-    ctx.fillStyle = done?'rgba(127,209,185,0.5)':'rgba(242,198,109,0.5)'; ctx.fill();
-    ctx.font='20px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
-    ctx.fillText(done?'✅':(m.icon||'✨'), mx, my+bounce);
+
+  if(field.exitRight && fieldState.x>=field.width-25){ startField(currentChapterKey, field.exitRight, 'left'); return; }
+  if(field.exitLeft && fieldState.x<=25){ startField(currentChapterKey, field.exitLeft, 'right'); return; }
+
+  let near=null, nd=9999;
+  field.npcs.forEach(npc=>{
+    const d = Math.abs(fieldState.x-npc.x);
+    if(d<50 && d<nd){ nd=d; near=npc; }
   });
-  drawDust(0);
-  const moving=(hVel.x!==0||hVel.y!==0);
-  if(currentLevel.characterType==='baby') drawBabyFloat(td.x, td.y, moving, td.t);
-  else drawWalkerTop(td.x, td.y, moving, td.t, td.dir);
+  if(near){ setAction('❗<br>대화하기', ()=> tryTalk(near)); }
+  else clearAction();
 }
-function spawnSnow(){
-  if(mode!=='topdown') return;
-  const s=document.createElement('div'); s.className='snow'; s.style.left=Math.random()*100+'%'; s.style.animationDuration=(3+Math.random()*3)+'s';
-  document.getElementById('gameWrap').appendChild(s); setTimeout(()=>s.remove(),6000);
+function fieldDraw(){
+  const chData = CHAPTER_FIELDS[currentChapterKey];
+  const field = chData.fields[currentFieldId];
+  const camX = Math.max(0, Math.min(fieldState.x-260, Math.max(0,field.width-canvas.width)));
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  drawFieldBg(field.theme);
+  field.props.forEach(p=> drawProp(p.type, p.x, camX, p.w, p.h, p.color));
+  field.npcs.forEach(npc=>{
+    const sx = npc.x-camX;
+    if(sx>-60&&sx<canvas.width+60) drawNPC(sx, FIELD_GROUND_Y, globalT, PALETTES[npc.palette]||PALETTES.prop, talked.includes(npc.id));
+  });
+  drawExitHints(field, camX);
+  drawDust(camX);
+  const playerSx = fieldState.x-camX;
+  ctx.beginPath(); ctx.ellipse(playerSx, FIELD_GROUND_Y+4, 13,5,0,0,Math.PI*2); ctx.fillStyle='rgba(0,0,0,0.2)'; ctx.fill();
+  if(currentChapterKey==='hospital'){ drawBabyFloat(playerSx, FIELD_GROUND_Y-18, fieldState.moving, fieldState.t); }
+  else { drawWalkerSide(playerSx, FIELD_GROUND_Y-2, fieldState.moving, false, fieldState.t, fieldState.facingRight); }
 }
-document.getElementById('actionBtn').addEventListener('click', ()=>{ if(mode==='topdown' && nearMission) tryInteract(); });
-function tryInteract(){
-  sfxInteract();
-  const mission = nearMission;
-  showDialogue(mission, ()=> onDialogueDone(mission.id));
+function tryTalk(npc){
+  sfxInteract(); clearAction();
+  showDialogue(npc.lines, ()=> onNpcDone(npc.id));
 }
-function onDialogueDone(id){
-  const key = Object.keys(TOPDOWN_LEVELS).find(k=>TOPDOWN_LEVELS[k]===currentLevel);
-  if(!completed.includes(id)){ completed.push(id); sessionStorage.setItem('missionsDone_'+key, JSON.stringify(completed)); sfxCollect(); }
-  renderMissionList();
-  document.getElementById('heartFill').style.width = Math.min(100, 20+completed.length*16)+'%';
-  document.getElementById('thrillFill').style.width = Math.min(100, 15+completed.length*17)+'%';
-  if(completed.length === currentLevel.missions.length){
+function onNpcDone(id){
+  if(!talked.includes(id)){ talked.push(id); sessionStorage.setItem('talked_'+currentChapterKey, JSON.stringify(talked)); sfxCollect(); }
+  updateFieldUI();
+  const total = chapterTotalNpc(currentChapterKey);
+  if(talked.length>=total){
     sfxClear();
-    document.getElementById('cardIcon').textContent = currentLevel.cardReward.icon;
-    document.getElementById('cardName').textContent = currentLevel.cardReward.name;
-    document.getElementById('cardEpithet').textContent = currentLevel.cardReward.epithet || '';
-    setTimeout(()=>document.getElementById('cardScreen').style.display='flex', 400);
+    const reward = CHAPTER_FIELDS[currentChapterKey].cardReward;
+    document.getElementById('cardIcon').textContent = reward.icon;
+    document.getElementById('cardName').textContent = reward.name;
+    document.getElementById('cardEpithet').textContent = reward.epithet||'';
+    setTimeout(()=>document.getElementById('cardScreen').style.display='flex', 500);
   }
 }
 function closeCardScreen(){ document.getElementById('cardScreen').style.display='none'; backToMap(); }
-function renderMissionList(){
-  document.getElementById('missionList').innerHTML = currentLevel.missions.map(m=>
-    `<span class="m-tag ${completed.includes(m.id)?'done':''}">${completed.includes(m.id)?'✅':'▫️'} ${m.label}</span>`
-  ).join('');
+function spawnSnow(){
+  if(mode!=='field') return;
+  const s=document.createElement('div'); s.className='snow'; s.style.left=Math.random()*100+'%'; s.style.animationDuration=(3+Math.random()*3)+'s';
+  document.getElementById('gameWrap').appendChild(s); setTimeout(()=>s.remove(),6000);
 }
 
 /* ---------- 조작 (조이스틱 + 키보드) ---------- */
@@ -781,11 +1009,11 @@ function joyHandle2D(cx0,cy0){
   const kx=Math.cos(angle)*dist, ky=Math.sin(angle)*dist;
   joyKnob.style.left=(32+kx)+'px'; joyKnob.style.top=(32+ky)+'px';
   if(mode==='platform'){ inputLeft = kx<-10; inputRight = kx>10; }
-  else if(mode==='topdown'){ hVel.x = Math.abs(kx)>10? kx/40:0; hVel.y = Math.abs(ky)>10? ky/40:0; }
+  else if(mode==='field'){ hVel.x = Math.abs(kx)>10? kx/40:0; }
 }
 joyBase.addEventListener('touchstart', e=>joyHandle2D(e.touches[0].clientX,e.touches[0].clientY));
 joyBase.addEventListener('touchmove', e=>{joyHandle2D(e.touches[0].clientX,e.touches[0].clientY); e.preventDefault();}, {passive:false});
-joyBase.addEventListener('touchend', ()=>{ inputLeft=false; inputRight=false; hVel.x=0; hVel.y=0; joyKnob.style.left='32px'; joyKnob.style.top='32px'; });
+joyBase.addEventListener('touchend', ()=>{ inputLeft=false; inputRight=false; hVel.x=0; joyKnob.style.left='32px'; joyKnob.style.top='32px'; });
 document.getElementById('jumpBtn').addEventListener('touchstart', e=>{ jumpQueued=true; e.preventDefault(); });
 document.getElementById('jumpBtn').addEventListener('click', ()=>{ jumpQueued=true; });
 
@@ -799,12 +1027,10 @@ window.addEventListener('keydown', e=>{
     if(k==='arrowleft'||k==='a') inputLeft=true;
     if(k==='arrowright'||k==='d') inputRight=true;
     if(k==='arrowup'||k==='w'||k===' ') jumpQueued=true;
-  } else if(mode==='topdown'){
+  } else if(mode==='field'){
     if(k==='arrowleft'||k==='a') hVel.x=-1;
     if(k==='arrowright'||k==='d') hVel.x=1;
-    if(k==='arrowup'||k==='w') hVel.y=-1;
-    if(k==='arrowdown'||k==='s') hVel.y=1;
-    if((k===' '||k==='enter') && nearMission) tryInteract();
+    if((k===' '||k==='enter') && pendingAction) pendingAction();
   }
 });
 window.addEventListener('keyup', e=>{
@@ -812,16 +1038,15 @@ window.addEventListener('keyup', e=>{
   if(mode==='platform'){
     if(k==='arrowleft'||k==='a') inputLeft=false;
     if(k==='arrowright'||k==='d') inputRight=false;
-  } else if(mode==='topdown'){
+  } else if(mode==='field'){
     if(['arrowleft','a','arrowright','d'].includes(k)) hVel.x=0;
-    if(['arrowup','w','arrowdown','s'].includes(k)) hVel.y=0;
   }
 });
 
 /* ---------- 메인 루프 ---------- */
 function loop(){
   if(mode==='platform'){ pfUpdate(); pfDraw(); }
-  else if(mode==='topdown'){ tdUpdate(); tdDraw(); }
+  else if(mode==='field'){ fieldUpdate(); fieldDraw(); }
   requestAnimationFrame(loop);
 }
 loop();
