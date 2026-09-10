@@ -494,6 +494,20 @@ function tryLockLandscape(){
   }catch(e){}
 }
 
+/* ---------------- ⭐ 크로스 디바이스 탭 바인딩 유틸 ---------------- */
+/* click과 touchend 둘 다 지원하되, 한 번 탭에 한 번만 실행되도록 중복 방지 */
+function bindTap(el, handler){
+  let lastFireTime = 0;
+  const fire = (e)=>{
+    const now = Date.now();
+    if(now - lastFireTime < 350) return; // 중복 실행 방지 (touchend 후 click이 다시 뜨는 것 방지)
+    lastFireTime = now;
+    handler(e);
+  };
+  el.addEventListener('touchend', (e)=>{ e.preventDefault(); fire(e); }, {passive:false});
+  el.addEventListener('click', fire);
+}
+
 /* ---------------- 사운드 ---------------- */
 let audioCtx=null, soundOn=true;
 function ensureAudio(){ if(!audioCtx){ try{ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } }
@@ -541,11 +555,11 @@ function renderWorldMap(){
     const node=document.createElement('div'); node.className='node'+(ch.status==='soon'?' soon':'');
     node.style.left=ch.pos.x+'%'; node.style.top=ch.pos.y+'%';
     node.innerHTML = `<div class="node-circle">${ch.icon}</div><div class="node-label">${String(i+1).padStart(2,'0')} · ${ch.title}</div>`;
-    node.onclick = ()=>{
+    bindTap(node, ()=>{
       if(ch.status==='soon'){ beep(300,0.1,'sine',0.12); toast('✨ 다음 서사시는 곧 노래됩니다'); return; }
       beep(700,0.1,'sine',0.15);
       launchChapter(ch);
-    };
+    });
     area.appendChild(node);
   });
 }
@@ -575,10 +589,10 @@ const FIELD_GROUND_Y = 320;
 
 function setAction(label, fn){ pendingAction=fn; const b=document.getElementById('actionBtn'); b.innerHTML=label; b.style.display='flex'; }
 function clearAction(){ pendingAction=null; document.getElementById('actionBtn').style.display='none'; }
-document.getElementById('actionBtn').addEventListener('click', ()=>{ if(pendingAction) pendingAction(); });
+bindTap(document.getElementById('actionBtn'), ()=>{ if(pendingAction) pendingAction(); });
 
-/* ---------------- JRPG 대화 시스템 ---------------- */
-let typeInterval=null, typeFullText='', dialogueQueue=[], dialogueOnComplete=null;
+/* ---------------- ⭐ JRPG 대화 시스템 (버그 수정됨) ---------------- */
+let typeInterval=null, typeFullText='', dialogueQueue=[], dialogueOnComplete=null, isTyping=false;
 
 function showDialogue(missionOrList, onComplete){
   dialogueQueue = Array.isArray(missionOrList) ? [...missionOrList] : [missionOrList];
@@ -606,20 +620,35 @@ function playNextDialogue(){
 }
 function typewriterText(html, speed=22){
   const el = document.getElementById('dialogueText');
-  clearInterval(typeInterval); el.innerHTML=''; typeFullText=html;
+  if(typeInterval){ clearInterval(typeInterval); typeInterval=null; }
+  el.innerHTML=''; typeFullText=html; isTyping=true;
   const plain = html.replace(/<[^>]+>/g,'');
   let i=0; const raw = html;
   typeInterval = setInterval(()=>{
     el.textContent = plain.slice(0, i+1);
     if(i%3===0) sfxType();
     i++;
-    if(i>=plain.length){ clearInterval(typeInterval); el.innerHTML = raw; }
+    if(i>=plain.length){
+      clearInterval(typeInterval);
+      typeInterval=null;      // ⭐ 핵심 수정: 인터벌 종료 후 반드시 null로 초기화
+      isTyping=false;
+      el.innerHTML = raw;
+    }
   }, speed);
 }
-document.getElementById('dialogueBox').addEventListener('click', ()=>{
-  if(typeInterval){ clearInterval(typeInterval); document.getElementById('dialogueText').innerHTML = typeFullText; }
-  else { playNextDialogue(); }
-});
+function advanceDialogue(){
+  if(isTyping){
+    // 타이핑 중이면 즉시 전체 텍스트 표시
+    if(typeInterval){ clearInterval(typeInterval); typeInterval=null; }
+    isTyping=false;
+    document.getElementById('dialogueText').innerHTML = typeFullText;
+  } else {
+    // 타이핑이 끝난 상태면 다음 대사로
+    playNextDialogue();
+  }
+}
+bindTap(document.getElementById('dialogueBox'), advanceDialogue);
+bindTap(document.getElementById('dialogueOverlay'), advanceDialogue);
 
 /* ---------------- 캐릭터 드로잉 ---------------- */
 function drawWalkerSide(cx, cy, moving, jumping, t, facingRight){
@@ -1028,6 +1057,7 @@ function onNpcDone(id){
     setTimeout(()=>document.getElementById('cardScreen').style.display='flex', 500);
   }
 }
+bindTap(document.getElementById('cardScreen').querySelector('button'), ()=>{ document.getElementById('cardScreen').style.display='none'; backToMap(); });
 function closeCardScreen(){ document.getElementById('cardScreen').style.display='none'; backToMap(); }
 function spawnSnow(){
   if(mode!=='field') return;
@@ -1035,7 +1065,7 @@ function spawnSnow(){
   document.getElementById('gameWrap').appendChild(s); setTimeout(()=>s.remove(),6000);
 }
 
-/* ---------- ⭐ 화면 아무 곳이나 드래그로 조작 (조이스틱 그래픽 없이) ---------- */
+/* ---------- 화면 아무 곳이나 드래그로 조작 ---------- */
 const gameWrapEl = document.getElementById('gameWrap');
 let touchCtl = { active:false, startX:0, startY:0, jumpCooldown:0 };
 function isControlButton(el){ return el && el.closest && (el.closest('#actionBtn') || el.closest('#jumpBtn')); }
@@ -1064,12 +1094,12 @@ function endTouchCtl(){ touchCtl.active=false; hVel.x=0; inputLeft=false; inputR
 gameWrapEl.addEventListener('touchend', endTouchCtl);
 gameWrapEl.addEventListener('touchcancel', endTouchCtl);
 document.getElementById('jumpBtn').addEventListener('touchstart', e=>{ jumpQueued=true; e.preventDefault(); e.stopPropagation(); });
-document.getElementById('jumpBtn').addEventListener('click', ()=>{ jumpQueued=true; });
+bindTap(document.getElementById('jumpBtn'), ()=>{ jumpQueued=true; });
 
 window.addEventListener('keydown', e=>{
   const k=e.key.toLowerCase();
   if(document.getElementById('dialogueOverlay').style.display==='flex'){
-    if(k===' '||k==='enter'){ document.getElementById('dialogueBox').click(); }
+    if(k===' '||k==='enter'||k==='arrowdown'){ advanceDialogue(); }
     return;
   }
   if(mode==='platform'){
@@ -1102,5 +1132,4 @@ loop();
 </script>
 </body>
 </html>
-
 
