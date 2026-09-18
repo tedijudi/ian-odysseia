@@ -2,7 +2,27 @@
    ✏️ STORY — 이야기·인물·장소 데이터 (대사 수정은 이 파일만 고치면 됩니다)
    - 《단어》 로 감싸면 금색 강조
    - \n 은 줄바꿈, \n\n 은 한 줄 띄우기
+   - 맵 좌표: x 는 왼쪽부터 px, platforms 의 y 는 발판 윗면 높이(작을수록 위)
+   - npc 의 plat:숫자 → 그 번호 발판 위에 서 있음 (없으면 땅)
+   - reward:['아이템id'] → 대화를 끝내면 가방에 들어가는 아이템
    ============================================================ */
+
+/* 이안이 프로필 (프로필 창) */
+const PROFILE = {
+  name:"이안", english:"Ian", title:"작은 영웅", nickname:"찰떡이",
+  birth:"2026년 3월 11일 오전 10시 15분", weight:"3.36kg", height:"47.5cm",
+  place:"안산우성여성병원", meaning:"기쁘고 평안하라"
+};
+
+/* 가방 아이템 */
+const ITEMS = {
+  plate:  { icon:"🍽️", name:"작은 접시", desc:"'저... 이거 좀 드세요.'\n족발집에서 조심스레 건네받은 접시 하나.\n두 사람의 오디세이아가 시작된 증표." },
+  jeju:   { icon:"🚗", name:"제주 해안도로 사진", desc:"지붕을 활짝 연 오픈카 위로 쏟아지던 햇살.\n매년 서로의 생일마다 반복된, 두 사람만의 작은 의식." },
+  halla:  { icon:"⛰️", name:"한라산 정상 사진", desc:"함께 내려다본 구름바다.\n숨이 턱까지 차올라도 손을 놓지 않았던 날." },
+  surf:   { icon:"🏄", name:"강원도 파도의 기억", desc:"서투른 몸짓으로 파도를 타던 날들.\n넘어지고 물을 먹으면서도 마주 보며 웃었다." },
+  album:  { icon:"📱", name:"휴대폰 사진첩", desc:"어느새 가득 쌓인 두 사람의 사진.\n'우리, 진짜 많이도 웃었다.'" },
+  oracle: { icon:"📜", name:"이름의 신탁", desc:"이안 — 기쁘고 평안하라.\n영문으로는 Ian.\n세상에서 유일한 존재가 된 날 받은 이름." }
+};
 
 const BIRTH = {
   date: "2026-03-11",
@@ -63,71 +83,85 @@ const CHAPTERS = [
 /* 배경: bg = outdoor | indoor | jokbal | sea   (flip:true 좌우반전, filter: CSS 필터로 분위기 바꾸기) */
 const CHAPTER_FIELDS = {
   chapter1: {
-    title:"에로스의 화살", icon:"🏹", player:"dad",
+    title:"에로스의 화살", icon:"🏹", player:"dad", playerName:"전시현",
     order:['street1','alley1','foodstreet','travels','wedding'],
     cardReward:{ icon:"🏹", name:"에로스의 화살", epithet:"운명이 시작된 순간의 증표" },
     fields:{
       street1:{
-        name:"회사 앞 거리", width:1100, bg:'outdoor',
+        name:"회사 앞 거리", width:1400, height:460, bg:'outdoor', tiles:'street',
+        platforms:[{x1:330,x2:560,y:340},{x1:610,x2:860,y:268},{x1:1010,x2:1210,y:336}],
+        ropes:[{x:836,y1:268,y2:396},{x:1036,y1:336,y2:396}],
+        sparkles:[{x:400,plat:0},{x:490,plat:0},{x:650,plat:1},{x:1110,plat:2}],
         exitRight:'alley1',
         npcs:[
-          { id:'cw_f1', x:260, label:"식당 이모님", palette:'apron', lines:[
+          { id:'cw_f1', x:210, label:"식당 이모님", palette:'apron', lines:[
             {speaker:'muse', label:'뮤즈의 노래', text:"신들의 궁전 올림포스, 짓궂은 사랑의 신 《에로스》가 활시위를 당겼다.\n\n그 화살이 향한 곳은, 회사 식당에서 묵묵히 일하던 한 여인을 몰래 훔쳐보던 어느 남자의 심장이었다."},
             {speaker:'coworker_f', text:"'아니 총각, 오늘도 밥 먹으면서 세은 씨 쪽만 힐끔힐끔 보네?'\n\n'그, 그런거 아니에요...!'\n\n애써 부인했지만, 귀는 이미 새빨갛게 물들어 있었다."}
           ]},
-          { id:'cw_m1', x:680, label:"회사 동료", palette:'suit', lines:[
+          { id:'cw_m1', x:720, plat:1, label:"회사 동료", palette:'suit', lines:[
             {speaker:'coworker_m', text:"'야, 너 요즘 왜 그렇게 넋을 놓고 다니냐?'\n\n'심장이... 이상해.'\n\n그는 그날 저녁, 마치 《오디세우스가 트로이의 목마를 설계하듯》 치밀한 작전을 세우기 시작했다."},
             {speaker:'dad_young', label:'운명에 사로잡힌 자', text:"'오늘, 다 같이 족발이나 어때요?'\n\n너무나 자연스러운 척, 그러나 필사적인 첫 수였다."}
           ]}
         ]
       },
       alley1:{
-        name:"골목길", width:900, bg:'outdoor', flip:true, filter:'brightness(.82) saturate(.9) sepia(.25) hue-rotate(-12deg)',
+        name:"골목길", width:1200, height:460, bg:'outdoor', tiles:'alley', flip:true,
+        platforms:[{x1:230,x2:430,y:338},{x1:490,x2:730,y:268},{x1:790,x2:990,y:338}],
+        ropes:[{x:510,y1:268,y2:396}],
+        sparkles:[{x:310,plat:0},{x:600,plat:1},{x:700,plat:1},{x:890,plat:2}], filter:'brightness(.82) saturate(.9) sepia(.25) hue-rotate(-12deg)',
         exitLeft:'street1', exitRight:'foodstreet',
         npcs:[
-          { id:'fom1', x:300, label:"엄마의 단짝", palette:'casual', lines:[
+          { id:'fom1', x:130, label:"엄마의 단짝", palette:'casual', lines:[
             {speaker:'friend_of_mom', text:"'세은아, 그 회사 그... 자꾸 너 챙기는 남자 있잖아. 어때?'\n\n'몰라, 그냥... 좀 웃기고, 은근히 다정해.'\n\n부인하듯 말했지만, 입가에는 옅은 미소가 걸려 있었다."}
           ]},
-          { id:'cw_f2', x:640, label:"식당 이모님", palette:'apron', lines:[
+          { id:'cw_f2', x:610, plat:1, label:"식당 이모님", palette:'apron', lines:[
             {speaker:'coworker_f', text:"'오늘 저녁에 다 같이 족발 먹으러 간다며? 잘 좀 해봐, 총각.'\n\n지혜의 여신 《아테나》조차 감탄할 위장술이었지만, 정작 본인은 이미 전쟁터에 나서는 병사처럼 심장이 요동치고 있었다."}
           ]}
         ]
       },
       foodstreet:{
-        name:"족발집 거리", width:1000, bg:'jokbal',
+        name:"족발집 거리", width:1300, height:460, bg:'jokbal', tiles:'jokbal',
+        platforms:[{x1:150,x2:360,y:338},{x1:860,x2:1080,y:338},{x1:940,x2:1160,y:266}],
+        ropes:[{x:1060,y1:266,y2:326}],
+        sparkles:[{x:250,plat:0},{x:900,plat:1},{x:1010,plat:2},{x:1110,plat:2}],
         exitLeft:'alley1', exitRight:'travels',
         npcs:[
-          { id:'jok1', x:280, label:"족발집 사장님", palette:'chef', lines:[
+          { id:'jok1', x:470, label:"족발집 사장님", palette:'chef', lines:[
             {speaker:'jokbal_owner', text:"'어서와요! 몇 분이세요?'\n\n우연을 가장한 자리가 마련되었다. 동료들 틈에 섞여 앉았지만, 두 사람의 시선은 자꾸만 서로를 향했다."}
           ]},
-          { id:'mom_d1', x:700, label:"어머니와의 첫 대화", palette:'mom', lines:[
+          { id:'mom_d1', x:720, reward:['plate'], label:"어머니와의 첫 대화", palette:'mom', lines:[
             {speaker:'mom', text:"'저... 이거 좀 드세요.'\n\n작은 접시 하나를 조심스레 건넸다. 별것 아닌 그 손짓 하나에, 그의 심장은 완전히 무너져 내렸다."},
             {speaker:'muse', label:'운명이 맺어지다', text:"2018년 4월 13일.\n\n모이라이 세 여신 중 《클로토》가 새로운 실 하나를 자아냈다.\n두 개의 운명이, 마침내 하나로 엮이기 시작한 순간이었다.\n\n이렇게, 두 사람의 오디세이아가 시작되었다."}
           ]}
         ]
       },
       travels:{
-        name:"우리의 여행", width:1000, bg:'sea',
+        name:"우리의 여행", width:1300, height:460, bg:'sea', tiles:'sea',
+        platforms:[{x1:250,x2:450,y:340},{x1:520,x2:740,y:270},{x1:900,x2:1120,y:336}],
+        ropes:[{x:540,y1:270,y2:396}],
+        sparkles:[{x:320,plat:0},{x:410,plat:0},{x:1070,plat:2}],
         exitLeft:'foodstreet', exitRight:'wedding',
         npcs:[
-          { id:'muse_t1', x:320, label:"우리의 여행 이야기", palette:'muse', lines:[
+          { id:'muse_t1', x:640, plat:1, reward:['jeju','halla','surf'], label:"우리의 여행 이야기", palette:'muse', lines:[
             {speaker:'muse', label:'바람의 기억', text:"연인이 된 두 사람은, 계절이 바뀔 때마다 함께 길을 떠났다.\n\n제주도의 푸른 해안도로, 지붕을 활짝 연 오픈카 위로 쏟아지던 햇살 — 그것은 매년 돌아오는 서로의 생일마다 반복된, 그들만의 작은 의식이었다."},
             {speaker:'muse', label:'한라의 정상', text:"한라산 정상에 올라 함께 내려다본 구름바다.\n\n숨이 턱까지 차올랐지만, 손을 놓지 않고 끝까지 함께 걸었다 — 그것이 두 사람이 사랑하는 방식이었다."},
             {speaker:'muse', label:'파도 위에서', text:"강원도의 차가운 바다 위, 서투른 몸짓으로 파도를 타던 날들.\n\n몇 번이고 넘어지고 물을 먹으면서도, 두 사람은 마주 보며 웃음을 터뜨렸다."}
           ]},
-          { id:'photo1', x:740, label:"사진첩", object:'📖', lines:[
+          { id:'photo1', x:990, plat:2, reward:['album'], label:"사진첩", object:'📖', lines:[
             {speaker:'dad_young', label:'사진첩', text:"휴대폰 속에는 어느새 두 사람의 사진이 가득 쌓여 있었다.\n\n'우리, 진짜 많이도 웃었다.'\n\n그 모든 순간들이 모여, 하나의 서사시를 이루고 있었다."}
           ]}
         ]
       },
       wedding:{
-        name:"결혼식장", width:900, bg:'indoor', filter:'brightness(1.05) saturate(1.1)', petals:true,
+        name:"결혼식장", width:1100, height:460, bg:'indoor', tiles:'marble',
+        platforms:[{x1:170,x2:370,y:338},{x1:730,x2:930,y:338}],
+        sparkles:[{x:230,plat:0},{x:310,plat:0},{x:790,plat:1},{x:870,plat:1},{x:550}], filter:'brightness(1.05) saturate(1.1)', petals:true,
         exitLeft:'travels',
         npcs:[
-          { id:'gma_p1', x:280, label:"할머니의 축복", palette:'grandma', lines:[
+          { id:'gma_p1', x:460, label:"할머니의 축복", palette:'grandma', lines:[
             {speaker:'grandma_p', text:"'우리 아들, 이렇게 좋은 사람을 만났구나.'\n\n주름진 눈가에 눈물이 맺혔다. 아들의 손을 꼭 잡으며, 오래도록 바라던 순간이 왔음을 느꼈다."}
           ]},
-          { id:'gpa_m1', x:640, label:"외조부모님의 축복", palette:'grandpa', lines:[
+          { id:'gpa_m1', x:650, label:"외조부모님의 축복", palette:'grandpa', lines:[
             {speaker:'grandpa_m', label:'외할아버지 장건식 & 외할머니 유재순', text:"'우리 딸, 행복하게 살아라.'\n\n두 사람은 나란히 서서, 딸의 새로운 시작을 축복했다.\n\n모이라이의 실타래는 이렇게 두 집안을 하나로 이었다."}
           ]}
         ]
@@ -137,12 +171,12 @@ const CHAPTER_FIELDS = {
 
   /* 챕터4 — 탄생 전에는 아버지 시점, '탄생의 순간' 이후부터 이안이 시점 */
   hospital:{
-    title:"에일레이티이아의 문", icon:"🌅", player:"dad", playerAfterBirth:"baby",
+    title:"에일레이티이아의 문", icon:"🌅", player:"dad", playerAfterBirth:"baby", playerName:"전시현", playerNameAfterBirth:"이안",
     order:['lobby','corridor','delivery','nursery'],
     cardReward:{ icon:"👶", name:"탄생의 증표", epithet:"에일레이티이아의 문을 통과한 자" },
     fields:{
       lobby:{
-        name:"병원 로비 · 안산우성여성병원", width:900, bg:'indoor', filter:'hue-rotate(150deg) saturate(.55) brightness(1.08)',
+        name:"병원 로비 · 안산우성여성병원", width:1000, height:440, bg:'indoor', tiles:'hospital', sparkles:[{x:440}], filter:'hue-rotate(150deg) saturate(.55) brightness(1.08)',
         exitRight:'corridor',
         npcs:[
           { id:'mom_w1', x:260, label:"어머니의 마음", palette:'mom', lines:[
@@ -154,7 +188,7 @@ const CHAPTER_FIELDS = {
         ]
       },
       corridor:{
-        name:"수술 준비실 복도", width:900, bg:'indoor', flip:true, filter:'hue-rotate(150deg) saturate(.45) brightness(1.0)',
+        name:"수술 준비실 복도", width:1000, height:440, bg:'indoor', tiles:'hospital', sparkles:[{x:560}], flip:true, filter:'hue-rotate(150deg) saturate(.45) brightness(1.0)',
         exitLeft:'lobby', exitRight:'delivery',
         npcs:[
           { id:'doc1', x:380, label:"담당 의사 선생님", palette:'doctor', lines:[
@@ -166,31 +200,32 @@ const CHAPTER_FIELDS = {
         ]
       },
       delivery:{
-        name:"분만실 · 탄생의 순간", width:900, bg:'indoor', filter:'brightness(1.12) saturate(.8)', lightBeam:true,
+        name:"분만실 · 탄생의 순간", width:1000, height:440, bg:'indoor', tiles:'hospital', filter:'brightness(1.12) saturate(.8)', lightBeam:true,
         exitLeft:'corridor', exitRight:'nursery', exitRightNeedsBirth:true,
         npcs:[
-          { id:'nurse_b1', x:420, label:"탄생의 순간", palette:'nurse', event:'birth', lines:[
+          { id:'nurse_b1', x:460, label:"탄생의 순간", palette:'nurse', event:'birth', lines:[
             {speaker:'muse', label:'세상의 첫 빛', text:"수술실의 불빛 아래, 모두가 숨을 죽였다.\n\n그리고 — 출산의 여신 《에일레이티이아》가 마침내 문을 활짝 열었다."}
           ]},
-          { id:'dad_h1', x:700, label:"처음 안아본 순간", palette:'dad', afterBirth:true, lines:[
+          { id:'dad_h1', x:740, label:"처음 안아본 순간", palette:'dad', afterBirth:true, lines:[
             {speaker:'dad', label:'처음 안아본 순간', text:"손끝이 떨렸다.\n\n세상의 그 어떤 트로피도, 그 어떤 승리도 — 이 작은 무게보다 무겁지 않았다.\n\n'세상을 다 가진 기분이란 게, 이런 거구나.'"}
           ]}
         ]
       },
       nursery:{
-        name:"신생아실 · 가족의 축복", width:1100, bg:'indoor',
+        name:"신생아실 · 가족의 축복", width:1200, height:440, bg:'indoor', tiles:'hospital',
+        platforms:[{x1:680,x2:860,y:322,cloud:true}], sparkles:[{x:320},{x:960}],
         exitLeft:'delivery',
         npcs:[
-          { id:'gma_p2', x:220, label:"할머니의 눈물", palette:'grandma', lines:[
+          { id:'gma_p2', x:230, label:"할머니의 눈물", palette:'grandma', lines:[
             {speaker:'grandma_p', text:"'아이고, 우리 강아지...'\n\n작은 손가락을 조심스레 만지며, 할머니의 눈시울이 붉어졌다."}
           ]},
-          { id:'gpa_m2', x:470, label:"외조부모님의 방문", palette:'grandpa', lines:[
+          { id:'gpa_m2', x:480, label:"외조부모님의 방문", palette:'grandpa', lines:[
             {speaker:'grandpa_m', label:'외할아버지 장건식 & 외할머니 유재순', text:"'우리 손주 태어났다는 소식에 한걸음에 달려왔단다.'\n\n두 분의 얼굴에는 이루 말할 수 없는 기쁨이 가득했다."}
           ]},
-          { id:'gpa_trib1', x:720, label:"하늘의 할아버지", palette:'tribute', lines:[
+          { id:'gpa_trib1', x:770, plat:0, label:"하늘의 할아버지", palette:'tribute', lines:[
             {speaker:'grandpa_tribute', text:"비록 이 자리에 함께하지 못했지만, 어딘가 높은 곳에서 따뜻한 눈으로 지켜보고 있었다.\n\n'우리 손주, 건강하게만 자라다오.'\n\n보이지 않는 곳에서도, 사랑은 늘 함께였다."}
           ]},
-          { id:'name1', x:960, label:"이름을 얻다", palette:'muse', lines:[
+          { id:'name1', x:1060, reward:['oracle'], label:"이름을 얻다", palette:'muse', lines:[
             {speaker:'muse', label:'이름을 얻는 신탁', text:"두 사람이 아이를 내려다보며 속삭였다.\n\n'이안아.'\n\n《기쁘고 평안하라》는 뜻을 담은 이름 — 영문으로는 《Ian》.\n\n신탁처럼 내려진 그 이름과 함께, 작은 영웅은 세상에서 유일한 존재가 되었다."}
           ]}
         ]
@@ -201,7 +236,9 @@ const CHAPTER_FIELDS = {
 
 /* 챕터3 — 엄마 뱃속 '태초의 바다' (점프 플랫포머) */
 const WOMB = {
-  length: 3000, groundY: 300,
+  length: 3000, height: 460, playerName:"찰떡이",
+  platforms:[{x1:420,x2:620,y:336},{x1:960,x2:1180,y:330},{x1:1260,x2:1460,y:262},{x1:1780,x2:1990,y:336},{x1:2240,x2:2460,y:322}],
+  ropes:[{x:1280,y1:262,y2:396,cord:true}],   /* 탯줄 로프 */
   cardReward:{ icon:"🌊", name:"열 달의 항해", epithet:"태초의 바다를 건넌 자" },
   enemies:[
     {x:300,range:60},{x:700,range:50},{x:1100,range:70},
