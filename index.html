@@ -41,8 +41,8 @@
   --sal:env(safe-area-inset-left,0px); --sar:env(safe-area-inset-right,0px);
 }
 *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
-html,body{height:100%; background:var(--ink);}
-body{ font-family:var(--sans); color:#fff; overflow:hidden; touch-action:none; user-select:none; -webkit-user-select:none; overscroll-behavior:none; }
+html,body{height:100%; background:var(--ink); overscroll-behavior:none;}
+body{ font-family:var(--sans); color:#fff; overflow:hidden; touch-action:manipulation; user-select:none; -webkit-user-select:none; overscroll-behavior:none; }
 button{ font-family:inherit; cursor:pointer; touch-action:manipulation; }
 .hidden{display:none !important;}
 
@@ -216,7 +216,7 @@ canvas#game{ position:absolute; inset:0; width:100%; height:100%; display:block;
 .win-head{ display:flex; align-items:center; justify-content:space-between; padding:8px 8px 8px 14px; background:linear-gradient(180deg,rgba(242,198,109,.24),rgba(242,198,109,.06)); border-bottom:1px solid rgba(242,198,109,.4); }
 .win-head b{ color:#ffe9b0; font-size:14px; }
 #winClose{ background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.2); border-radius:6px; color:#fff; font-size:13px; width:30px; height:28px; }
-#winBody{ padding:12px 14px 14px; overflow-y:auto; font-size:13px; color:#ece6ff; }
+#winBody{ padding:12px 14px 14px; overflow-y:auto; touch-action:pan-y; -webkit-overflow-scrolling:touch; font-size:13px; color:#ece6ff; }
 .bag-grid{ display:grid; grid-template-columns:repeat(5,1fr); gap:6px; }
 .slot{ aspect-ratio:1; border-radius:7px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.16); font-size:24px; display:flex; align-items:center; justify-content:center; color:inherit; padding:0; }
 .slot.sel{ border-color:var(--gold); background:rgba(242,198,109,.14); box-shadow:0 0 0 2px rgba(242,198,109,.25) inset; }
@@ -254,7 +254,7 @@ canvas#game{ position:absolute; inset:0; width:100%; height:100%; display:block;
 @keyframes breatheAnim{ 0%,100%{transform:scale(1);} 50%{transform:scale(1.03) translateY(-2px);} }
 @keyframes portraitIn{ from{transform:translateY(30px) scale(.85); opacity:0;} to{transform:none; opacity:1;} }
 #dialogueBox{ position:relative; width:100%; background:linear-gradient(160deg,rgba(24,28,58,.96),rgba(12,14,34,.97)); border:2px solid #b8c8e0; border-radius:14px;
-  padding:34px 18px 18px; box-shadow:0 0 0 1px rgba(255,255,255,.08) inset, 0 12px 30px rgba(0,0,0,.5); max-height:min(56vh,360px); overflow-y:auto; animation:boxIn .3s ease; }
+  padding:34px 18px 18px; box-shadow:0 0 0 1px rgba(255,255,255,.08) inset, 0 12px 30px rgba(0,0,0,.5); max-height:min(56vh,360px); overflow-y:auto; touch-action:pan-y; animation:boxIn .3s ease; }
 @keyframes boxIn{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:none;} }
 #speakerName{ display:flex; align-items:baseline; flex-wrap:wrap; gap:4px 8px; margin-bottom:8px; padding-bottom:6px; border-bottom:1px solid rgba(255,233,176,.25); }
 #speakerName b{ color:#ffe9b0; font-size:14px; }
