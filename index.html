@@ -146,14 +146,21 @@ canvas#game{ position:absolute; inset:0; width:100%; height:100%; display:block;
 #joy::before{ content:'▲\A◀     ▶\A▼'; white-space:pre; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; text-align:center; font-size:10px; line-height:2.9; color:rgba(255,255,255,.35); pointer-events:none; }
 #joyKnob{ position:absolute; left:50%; top:50%; width:50px; height:50px; margin:-25px 0 0 -25px; border-radius:50%; background:radial-gradient(circle at 35% 30%, #fffbe8, #e6c170); border:2px solid #fff; box-shadow:0 4px 12px rgba(0,0,0,.45); pointer-events:none; }
 #joyKnob.back{ transition:transform .12s ease-out; }
-.actBtns{ display:flex; align-items:flex-end; gap:12px; }
+.actBtns{ display:flex; align-items:flex-end; gap:10px; }
+.ab-col{ display:flex; flex-direction:column; align-items:center; gap:8px; }
 .ctl{ width:62px; height:62px; border-radius:50%; border:2px solid rgba(255,255,255,.6); background:rgba(20,16,44,.45); color:#fff; font-size:21px; display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1; backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); touch-action:none; }
 .ctl small{ font-size:10.5px; font-weight:700; margin-top:3px; }
 .ctl.pressed{ transform:scale(.9); filter:brightness(1.25); }
-#btnAct{ margin-bottom:44px; background:radial-gradient(circle,#b9e8ff,#4f9ad8); border-color:#fff; }
+#btnAct{ background:radial-gradient(circle,#b9e8ff,#4f9ad8); border-color:#fff; }
 #btnAct.idle{ background:rgba(20,16,44,.45); border-color:rgba(255,255,255,.35); opacity:.6; }
 #btnAct.ready{ background:radial-gradient(circle,#fff3b0,#e0a93a); color:#3a2a10; animation:actionPulse 1.1s ease-in-out infinite; }
 #btnJump{ width:80px; height:80px; background:radial-gradient(circle,#ffe27a,#e0a93a); color:#3a2a10; border-color:#fff; box-shadow:0 6px 18px rgba(0,0,0,.4); }
+#screen-game:not(.combat) #btnAtk, #screen-game:not(.combat) #btnSkill{ display:none; }
+#screen-game.combat #btnJump{ width:66px; height:66px; }
+#btnAtk{ width:80px; height:80px; background:radial-gradient(circle,#ffd0e0,#e0507e); color:#fff; border-color:#fff; box-shadow:0 6px 18px rgba(0,0,0,.4); font-size:26px; }
+#btnSkill{ position:relative; overflow:hidden; background:radial-gradient(circle,#efe4ff,#8a6fd0); color:#fff; border-color:#fff; }
+#btnSkill .cd{ position:absolute; inset:0; border-radius:50%; background:conic-gradient(rgba(10,8,24,.72) calc(var(--cd,0) * 360deg), transparent 0); pointer-events:none; }
+#btnAtk.locked, #btnSkill.locked{ filter:grayscale(.85); opacity:.5; }
 @keyframes actionPulse{ 0%,100%{transform:scale(1);} 50%{transform:scale(1.08);} }
 @media (hover:hover) and (pointer:fine){
   #controls{ display:none !important; }
@@ -177,6 +184,8 @@ canvas#game{ position:absolute; inset:0; width:100%; height:100%; display:block;
 .gb i{ position:absolute; left:0; top:0; bottom:0; width:0; transition:width .45s; }
 .hp .gb i{ background:linear-gradient(180deg,#ffa9c8,#e0507e); }
 .mp .gb i{ background:linear-gradient(180deg,#a8e0ff,#3f8fd8); }
+.gb.low{ animation:lowHp 1s ease-in-out infinite; }
+@keyframes lowHp{ 0%,100%{ box-shadow:none; } 50%{ box-shadow:0 0 0 2px rgba(255,90,126,.8); } }
 .gb em{ position:absolute; inset:0; font-style:normal; font-size:9.5px; font-weight:700; display:flex; align-items:center; justify-content:center; color:#fff; text-shadow:0 1px 2px #000; font-variant-numeric:tabular-nums; }
 .sb-menu{ display:flex; gap:4px; flex-shrink:0; }
 .sb-menu button{ width:42px; height:36px; border-radius:6px; background:rgba(255,255,255,.07); border:1px solid rgba(242,198,109,.4); color:#fff; font-size:15px; display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1; }
@@ -193,7 +202,8 @@ canvas#game{ position:absolute; inset:0; width:100%; height:100%; display:block;
   .sb-menu button{ height:30px; }
   .sb-menu button small{ display:none; }
   #joy{ width:104px; height:104px; }
-  .ctl{ width:56px; height:56px; } #btnJump{ width:70px; height:70px; } #btnAct{ margin-bottom:38px; }
+  .ctl{ width:54px; height:54px; } #btnJump{ width:68px; height:68px; } #btnAtk{ width:68px; height:68px; }
+  #screen-game.combat #btnJump{ width:58px; height:58px; } .ab-col{ gap:6px; }
 }
 
 /* 세로 화면 */
@@ -223,6 +233,21 @@ canvas#game{ position:absolute; inset:0; width:100%; height:100%; display:block;
 .slot.empty{ opacity:.35; }
 .item-detail{ margin-top:12px; padding:12px; border-radius:8px; background:rgba(0,0,0,.28); border:1px solid rgba(255,255,255,.08); font-family:var(--serif); line-height:1.75; white-space:pre-line; min-height:84px; font-size:13.5px; }
 .item-detail b{ color:#ffe9b0; font-family:var(--sans); }
+.eq-slots{ display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin-bottom:10px; }
+.eq-slot{ aspect-ratio:1; border-radius:8px; background:rgba(255,255,255,.04); border:1px dashed rgba(255,255,255,.22); display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:22px; }
+.eq-slot.on{ border:1px solid var(--gold); background:rgba(242,198,109,.13); }
+.eq-slot small{ font-size:9.5px; color:#a79dd0; margin-top:3px; }
+.eq-stats{ display:grid; grid-template-columns:1fr 1fr; gap:5px 14px; padding:9px 11px; border-radius:8px; background:rgba(0,0,0,.26); font-size:12px; color:#cfc6e8; }
+.eq-stats span{ display:flex; justify-content:space-between; } .eq-stats b{ color:#ffe9b0; font-variant-numeric:tabular-nums; }
+.eq-sec{ color:#ffe9b0; font-size:12px; font-weight:700; margin:14px 0 2px; }
+.eq-row{ display:flex; align-items:flex-start; gap:10px; padding:9px 2px; border-bottom:1px dashed rgba(255,255,255,.1); }
+.eq-row .ic{ font-size:22px; width:30px; text-align:center; flex-shrink:0; }
+.eq-row .nm{ flex:1; min-width:0; }
+.eq-row .nm b{ display:block; font-size:13px; color:#fff; } .eq-row .nm small{ display:block; color:var(--gold); font-size:11px; margin-top:1px; }
+.eq-desc{ font-family:var(--serif); font-size:12.5px; color:#d9d2f2; line-height:1.7; white-space:pre-line; margin-top:4px; }
+.eq-row button{ flex-shrink:0; padding:7px 12px; border-radius:6px; border:1px solid rgba(242,198,109,.65); background:rgba(242,198,109,.16); color:#ffe9b0; font-size:12px; font-weight:700; }
+.eq-row button.off{ background:transparent; color:#cfc6e8; border-color:rgba(255,255,255,.25); }
+.eq-empty{ color:#8e86b4; font-size:12.5px; padding:8px 2px; line-height:1.6; }
 .q-ch{ margin-bottom:12px; }
 .q-head{ display:flex; justify-content:space-between; align-items:center; gap:8px; padding-bottom:5px; margin-bottom:4px; border-bottom:1px solid rgba(242,198,109,.3); }
 .q-head b{ color:#ffe9b0; font-size:13px; }
@@ -250,9 +275,16 @@ canvas#game{ position:absolute; inset:0; width:100%; height:100%; display:block;
 #portraitCard img{ width:100%; height:100%; object-fit:cover; object-position:50% 20%; display:block; }
 #portraitCard::after{ content:''; position:absolute; inset:0; background:linear-gradient(180deg,transparent 62%,rgba(12,10,30,.75)); pointer-events:none; }
 #portraitFallback{ display:none; width:100%; height:100%; align-items:center; justify-content:center; font-size:min(16vw,68px); }
+#portraitCard.sprite img{ object-fit:contain; object-position:50% 100%; }
 #portraitCard.glow{ box-shadow:0 0 0 4px rgba(18,13,38,.85), 0 0 40px rgba(255,240,200,.8); }
 @keyframes breatheAnim{ 0%,100%{transform:scale(1);} 50%{transform:scale(1.03) translateY(-2px);} }
 @keyframes portraitIn{ from{transform:translateY(30px) scale(.85); opacity:0;} to{transform:none; opacity:1;} }
+#dlgChoices{ display:none; flex-direction:column; gap:7px; margin-top:12px; }
+#dlgChoices button{ text-align:left; padding:10px 12px; border-radius:8px; background:rgba(255,255,255,.07); border:1px solid rgba(242,198,109,.5); color:#fff; font-size:14.5px; display:flex; gap:10px; align-items:center; }
+#dlgChoices button b{ width:22px; height:22px; border-radius:50%; background:var(--gold); color:#3a2a10; font-size:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+#dlgChoices button:active{ background:rgba(242,198,109,.22); }
+#dialogueBox.wrong{ animation:wrongShake .42s ease; }
+@keyframes wrongShake{ 20%{transform:translateX(-9px);} 40%{transform:translateX(8px);} 60%{transform:translateX(-5px);} 80%{transform:translateX(4px);} }
 #dialogueBox{ position:relative; width:100%; background:linear-gradient(160deg,rgba(24,28,58,.96),rgba(12,14,34,.97)); border:2px solid #b8c8e0; border-radius:14px;
   padding:34px 18px 18px; box-shadow:0 0 0 1px rgba(255,255,255,.08) inset, 0 12px 30px rgba(0,0,0,.5); max-height:min(56vh,360px); overflow-y:auto; touch-action:pan-y; animation:boxIn .3s ease; }
 @keyframes boxIn{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:none;} }
@@ -354,8 +386,14 @@ canvas#game{ position:absolute; inset:0; width:100%; height:100%; display:block;
     <div id="controls">
       <div id="joy" aria-label="이동 조이스틱"><div id="joyKnob"></div></div>
       <div class="actBtns">
-        <button class="ctl idle" id="btnAct"><span id="actIcon">💬</span><small id="actLabel">대화</small></button>
-        <button class="ctl" id="btnJump"><span>▲</span><small>점프</small></button>
+        <div class="ab-col">
+          <button class="ctl idle" id="btnAct"><span id="actIcon">💬</span><small id="actLabel">대화</small></button>
+          <button class="ctl" id="btnJump"><span>▲</span><small>점프</small></button>
+        </div>
+        <div class="ab-col">
+          <button class="ctl locked" id="btnSkill" aria-label="스킬"><span>✦</span><small id="skillLabel">Lv3</small><i class="cd"></i></button>
+          <button class="ctl locked" id="btnAtk" aria-label="공격"><span>🏹</span><small>공격</small></button>
+        </div>
       </div>
     </div>
   </div>
@@ -369,6 +407,7 @@ canvas#game{ position:absolute; inset:0; width:100%; height:100%; display:block;
     </div>
     <div class="sb-menu">
       <button id="mQuest" title="퀘스트 (Q)">📜<small>퀘스트</small></button>
+      <button id="mEquip" title="장비 (E)">⚔️<small>장비</small></button>
       <button id="mBag" title="가방 (I)">🎒<small>가방</small></button>
       <button id="mProfile" title="프로필 (P)">👶<small>프로필</small></button>
     </div>
@@ -383,6 +422,7 @@ canvas#game{ position:absolute; inset:0; width:100%; height:100%; display:block;
     <div id="dialogueBox">
       <div id="speakerName"></div>
       <div id="dialogueText"></div>
+      <div id="dlgChoices"></div>
       <div id="dialogueCount"></div>
       <div id="dlgBtns"><button id="dlgStop">대화 그만하기</button><button id="dlgNext">다음 ▸</button></div>
     </div>
