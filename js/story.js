@@ -81,21 +81,24 @@ const PORTRAITS = {
   sphinx:         { img:"", emoji:"🦁", name:"스핑크스" }
 };
 
-/* 필드 캐릭터 색/머리 모양 (hair: short | long | bun | pony) */
+/* 필드 캐릭터 모습 (그림은 js/avatar.js 가 코드로 그려요)
+   hairStyle: short | long | bun | pony | curly
+   outfit: shirt | suit | tee | chef | dress | nurse | doctor | cardigan | vest | robe | tunic | apron
+   fem:true 속눈썹 · eyes:'smile' 웃는 눈 · old:true 어르신 · hat: chef | nurse | laurel · halo · wings · float · glow */
 const PALETTES = {
-  apron:  {skin:'#f6cfa8', hair:'#4a3524', cloth:'#f0c060', cloth2:'#6a5438', hairStyle:'bun',  skirt:true},
-  suit:   {skin:'#f6cfa8', hair:'#2a2a2a', cloth:'#3f5478', cloth2:'#232b40', hairStyle:'short'},
-  casual: {skin:'#f6cfa8', hair:'#3a2a20', cloth:'#ec95a8', cloth2:'#7a4a55', hairStyle:'pony', skirt:true},
-  chef:   {skin:'#f6cfa8', hair:'#2a2a2a', cloth:'#ffffff', cloth2:'#3a3a3a', hairStyle:'short', hat:'chef'},
-  mom:    {skin:'#f8d4b0', hair:'#2e211b', cloth:'#d3a0e0', cloth2:'#6a4a75', hairStyle:'long', skirt:true},
-  dad:    {skin:'#f3c9a0', hair:'#231c1c', cloth:'#4a6f95', cloth2:'#26364a', hairStyle:'short'},
-  nurse:  {skin:'#f6cfa8', hair:'#2a2a2a', cloth:'#ffffff', cloth2:'#8ec9e0', hairStyle:'bun', hat:'nurse', skirt:true},
-  doctor: {skin:'#f6cfa8', hair:'#2a2a2a', cloth:'#eef4fa', cloth2:'#3a5a7a', hairStyle:'short'},
-  grandma:{skin:'#f2cdae', hair:'#d8d8d8', cloth:'#b06282', cloth2:'#5a2c3c', hairStyle:'bun', skirt:true},
-  grandpa:{skin:'#f2cdae', hair:'#c8c8c8', cloth:'#667a52', cloth2:'#30351f', hairStyle:'short'},
-  tribute:{skin:'#fff9ea', hair:'#ffffff', cloth:'#ffe9b0', cloth2:'#fff4d8', hairStyle:'short', glow:true},
-  muse:   {skin:'#ffe9d8', hair:'#f2c66d', cloth:'#e6dcf6', cloth2:'#b8a2dc', hairStyle:'long', glow:true, skirt:true},
-  eros:   {skin:'#ffe6d2', hair:'#f0c060', cloth:'#ffffff', cloth2:'#f6d6e4', hairStyle:'short', glow:true, wings:true, float:true}
+  apron:  {skin:'#f8d2b0', hair:'#4a3524', cloth:'#f0c060', cloth2:'#8a6a48', hairStyle:'bun',  outfit:'apron', fem:true, eye:'#5a3a26'},
+  suit:   {skin:'#f6cfa8', hair:'#2a2424', cloth:'#3f5478', cloth2:'#232b40', hairStyle:'short', outfit:'suit', eye:'#3a2a20'},
+  casual: {skin:'#f8d4b4', hair:'#3a2a20', cloth:'#ec95a8', cloth2:'#6a4a8a', hairStyle:'pony', outfit:'tee', skirt:true, fem:true, eye:'#4a2e22'},
+  chef:   {skin:'#f3caa2', hair:'#2a2424', cloth:'#ffffff', cloth2:'#3a3a3a', hairStyle:'short', hat:'chef', outfit:'chef', mouth:'open', eye:'#3a2418'},
+  mom:    {skin:'#fad8ba', hair:'#2e211b', cloth:'#d3a0e0', cloth2:'#6a4a75', hairStyle:'long', outfit:'dress', fem:true, eye:'#4a2c20'},
+  dad:    {skin:'#f3c9a0', hair:'#231c1c', cloth:'#4a78a8', cloth2:'#26364a', hairStyle:'short', outfit:'shirt', eye:'#3a2418'},
+  nurse:  {skin:'#f8d4b4', hair:'#2a2424', cloth:'#fdfdff', cloth2:'#8ec9e0', hairStyle:'bun', hat:'nurse', outfit:'nurse', fem:true, eye:'#3a2a20'},
+  doctor: {skin:'#f3caa2', hair:'#2a2424', cloth:'#f4f8fc', cloth2:'#5a7aa0', hairStyle:'short', outfit:'doctor', eye:'#3a2418'},
+  grandma:{skin:'#f2cdae', hair:'#d6d4d8', cloth:'#b06282', cloth2:'#5a2c3c', hairStyle:'bun', outfit:'cardigan', skirt:true, fem:true, eyes:'smile', old:true},
+  grandpa:{skin:'#f0c9a6', hair:'#c8c6c4', cloth:'#667a52', cloth2:'#3a3f2a', hairStyle:'short', outfit:'vest', eyes:'smile', old:true},
+  tribute:{skin:'#fff5e4', hair:'#ffffff', cloth:'#fff4d8', cloth2:'#ffe9b0', hairStyle:'short', outfit:'robe', eyes:'smile', old:true, glow:true, halo:true},
+  muse:   {skin:'#ffe9d8', hair:'#f2c66d', cloth:'#efe6fa', cloth2:'#b8a2dc', hairStyle:'long', outfit:'robe', fem:true, hat:'laurel', eye:'#8a5a2a', glow:true},
+  eros:   {skin:'#ffe6d2', hair:'#f0c060', cloth:'#ffffff', cloth2:'#f6d6e4', hairStyle:'curly', outfit:'tunic', eye:'#4a6ab0', mouth:'open', glow:true, wings:true, float:true}
 };
 
 /* 여정의 지도 — status: playable | soon */

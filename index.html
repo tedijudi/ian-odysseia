@@ -339,6 +339,53 @@ canvas#game{ position:absolute; inset:0; width:100%; height:100%; display:block;
 @keyframes ciFadeIn{to{opacity:1;}}
 
 .toast{position:fixed; top:calc(56px + var(--sat)); left:50%; transform:translateX(-50%); background:#2a1f4a; color:var(--gold); padding:10px 18px; border-radius:999px; font-size:13px; z-index:600; opacity:0; transition:opacity .3s; border:1px solid var(--gold); pointer-events:none; max-width:90vw; text-align:center;}
+
+/* ================= 고급 마감 (금속 테두리 · 광택 · 장식) ================= */
+:root{ --frame:linear-gradient(180deg,#fff0c2 0%,#e2b75a 38%,#9c6f24 62%,#f1d489 100%); --panel:linear-gradient(180deg,#2a2152 0%,#1a1438 55%,#110d26 100%); }
+#statusBar{ background:linear-gradient(180deg,#3b3070 0%,#231b4a 40%,#140f2c 100%); border-top:0; box-shadow:0 -1px 0 #0a0818, inset 0 2px 0 #e2b75a, inset 0 3px 0 rgba(255,240,194,.45), inset 0 -1px 0 rgba(255,255,255,.05); padding-top:7px; }
+.sb-lv{ position:relative; background:radial-gradient(circle at 50% 30%,#3a2f68,#120d28 75%); border:1px solid #e2b75a; box-shadow:0 0 0 1px #3a2a10, inset 0 1px 0 rgba(255,240,194,.35), 0 2px 6px rgba(0,0,0,.5); }
+.sb-lv b{ background:linear-gradient(180deg,#fff6cf,#f2c66d 55%,#c9913a); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.sb-name b{ text-shadow:0 1px 0 #000; }
+.gb{ border:1px solid #0a0818; box-shadow:0 0 0 1px rgba(226,183,90,.55), inset 0 2px 3px rgba(0,0,0,.6); background:linear-gradient(180deg,#0a0818,#1a1436); }
+.gb::after{ content:''; position:absolute; left:0; right:0; top:0; height:48%; background:linear-gradient(180deg,rgba(255,255,255,.34),rgba(255,255,255,.04)); pointer-events:none; }
+.hp .gb i{ background:linear-gradient(180deg,#ffb3cb,#f0567f 55%,#b8264f); }
+.mp .gb i{ background:linear-gradient(180deg,#b9e6ff,#4c9fe6 55%,#1f5fa8); }
+.sb-menu button{ background:linear-gradient(180deg,#43377a,#211a46 60%,#171233); border:1px solid #c9a24e; box-shadow:inset 0 1px 0 rgba(255,240,194,.35), inset 0 -2px 0 rgba(0,0,0,.35), 0 2px 4px rgba(0,0,0,.45); }
+.sb-menu button small{ color:#f2e2b4; }
+#expBar{ background:linear-gradient(180deg,#07060f,#15112a); border-top:1px solid #6b5220; }
+#expBar i{ background:linear-gradient(180deg,#fffbe0 0%,#f6d77a 45%,#d9a13a 100%); box-shadow:0 0 8px rgba(242,198,109,.6); overflow:hidden; }
+#expBar i::after{ content:''; position:absolute; top:0; bottom:0; width:40px; left:-40px; background:linear-gradient(90deg,transparent,rgba(255,255,255,.75),transparent); animation:expShine 3.2s ease-in-out infinite; }
+@keyframes expShine{ 0%{ left:-40px; } 60%,100%{ left:100%; } }
+
+/* 창: 금테 이중 프레임 + 모서리 장식 */
+.win-panel{ position:relative; background:var(--panel); border:1px solid #e2b75a; box-shadow:0 0 0 1px #3a2a10, 0 0 0 4px #1b1533, 0 0 0 5px rgba(226,183,90,.5), 0 24px 60px rgba(0,0,0,.65); }
+.win-panel::before, .win-panel::after, #dialogueBox::before, #dialogueBox::after{ content:''; position:absolute; width:18px; height:18px; pointer-events:none; z-index:3;
+  background:radial-gradient(circle at 50% 50%,#fff6cf 0 2.2px,transparent 2.6px), conic-gradient(from 45deg,#f2d489,#a8782c,#f2d489,#a8782c,#f2d489); -webkit-mask:radial-gradient(circle,#000 0 5px,transparent 5.5px); mask:radial-gradient(circle,#000 0 5px,transparent 5.5px); width:12px; height:12px; }
+.win-panel::before{ top:5px; left:5px; } .win-panel::after{ top:5px; right:5px; }
+.win-head{ background:linear-gradient(180deg,#5a4588 0%,#352868 50%,#261d4e 100%); border-bottom:1px solid #e2b75a; box-shadow:inset 0 1px 0 rgba(255,255,255,.18), 0 1px 0 #0a0818; }
+.win-head b{ font-family:var(--serif); letter-spacing:1px; background:linear-gradient(180deg,#fff6cf,#f2c66d); -webkit-background-clip:text; background-clip:text; color:transparent; text-shadow:none; }
+#winClose{ background:linear-gradient(180deg,#5b4a8a,#2a2050); border:1px solid #c9a24e; box-shadow:inset 0 1px 0 rgba(255,255,255,.2); }
+.slot{ background:linear-gradient(180deg,rgba(0,0,0,.35),rgba(255,255,255,.04)); box-shadow:inset 0 2px 4px rgba(0,0,0,.55), 0 1px 0 rgba(255,255,255,.06); }
+
+/* 대화창: 금테 + 모서리 장식 + 이름 리본 */
+#dialogueBox{ background:linear-gradient(170deg,rgba(40,32,82,.97),rgba(16,12,36,.98) 60%); border:1px solid #e2b75a; box-shadow:0 0 0 1px #3a2a10, 0 0 0 4px rgba(22,17,44,.95), 0 0 0 5px rgba(226,183,90,.55), 0 18px 44px rgba(0,0,0,.6); }
+#dialogueBox::before{ top:5px; left:5px; } #dialogueBox::after{ top:5px; right:5px; }
+#speakerName b{ background:linear-gradient(180deg,#fff6cf,#f2c66d); -webkit-background-clip:text; background-clip:text; color:transparent; }
+#speakerName{ border-bottom:0; background:linear-gradient(90deg,rgba(226,183,90,.55),rgba(226,183,90,0)) bottom/100% 1px no-repeat; }
+#portraitCard{ border:1px solid #e2b75a; box-shadow:0 0 0 1px #3a2a10, 0 0 0 4px rgba(22,17,44,.95), 0 0 0 5px rgba(226,183,90,.55), 0 12px 30px rgba(0,0,0,.5); background:radial-gradient(circle at 50% 35%,#fff6e4,#e8dcf6 60%,#b9a8dc); }
+#dlgNext{ background:linear-gradient(180deg,#fff0c2,#f2c66d 45%,#c9913a); border:1px solid #7a5418; box-shadow:inset 0 1px 0 rgba(255,255,255,.6), 0 3px 10px rgba(217,164,65,.35); }
+#dlgStop{ background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(255,255,255,.03)); border:1px solid rgba(226,183,90,.45); }
+#dlgChoices button{ background:linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.02)); border:1px solid rgba(226,183,90,.6); box-shadow:inset 0 1px 0 rgba(255,255,255,.08); }
+
+/* 미니맵 · 퀘스트 알림 · 상단 버튼 */
+#minimap, #questHelper{ background:linear-gradient(180deg,rgba(38,30,76,.86),rgba(14,11,32,.86)); border:1px solid rgba(226,183,90,.75); box-shadow:0 0 0 1px rgba(10,8,24,.8), 0 6px 16px rgba(0,0,0,.35); }
+#mmTitle{ background:linear-gradient(180deg,#5a4588,#2c2258); border-bottom:1px solid rgba(226,183,90,.7); }
+#topBtns .pill{ background:linear-gradient(180deg,rgba(70,56,130,.85),rgba(28,22,58,.85)); border:1px solid rgba(226,183,90,.7); box-shadow:inset 0 1px 0 rgba(255,255,255,.15), 0 3px 8px rgba(0,0,0,.35); color:#fff3d6; }
+
+/* 조작 버튼 광택 */
+.ctl{ box-shadow:inset 0 2px 0 rgba(255,255,255,.45), inset 0 -3px 6px rgba(0,0,0,.25), 0 5px 14px rgba(0,0,0,.4); }
+.ctl::after{ content:''; position:absolute; left:18%; right:18%; top:7%; height:30%; border-radius:50%; background:linear-gradient(180deg,rgba(255,255,255,.55),rgba(255,255,255,0)); pointer-events:none; }
+.ctl{ position:relative; }
 </style>
 </head>
 <body>
@@ -460,6 +507,7 @@ canvas#game{ position:absolute; inset:0; width:100%; height:100%; display:block;
 <div class="toast" id="toast"></div>
 
 <script src="js/story.js"></script>
+<script src="js/avatar.js"></script>
 <script src="js/game.js"></script>
 </body>
 </html>
