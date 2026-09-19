@@ -81,6 +81,13 @@ const PORTRAITS = {
   sphinx:         { img:"", emoji:"🦁", name:"스핑크스" }
 };
 
+/* 도트 스프라이트 (images/px/*.png — 사진을 보고 한 땀씩 찍은 메이플풍 도트)
+   frames: 가로로 이어 붙인 동작 순서 · scale: 게임 속 크기 */
+const SPRITES = {
+  seeun: { src:'images/px/seeun.png', w:46, h:66, scale:1.2,  frames:['idle','breath','blink','talk'] },
+  ian:   { src:'images/px/ian.png',   w:40, h:50, scale:1.08, frames:['idle','breath','blink','walk1','walk2','happy'] }
+};
+
 /* 필드 캐릭터 모습 (그림은 js/avatar.js 가 코드로 그려요)
    hairStyle: short | long | bun | pony | curly
    outfit: shirt | suit | tee | chef | dress | nurse | doctor | cardigan | vest | robe | tunic | apron
@@ -90,7 +97,7 @@ const PALETTES = {
   suit:   {skin:'#f6cfa8', hair:'#2a2424', cloth:'#3f5478', cloth2:'#232b40', hairStyle:'short', outfit:'suit', eye:'#3a2a20'},
   casual: {skin:'#f8d4b4', hair:'#3a2a20', cloth:'#ec95a8', cloth2:'#6a4a8a', hairStyle:'pony', outfit:'tee', skirt:true, fem:true, eye:'#4a2e22'},
   chef:   {skin:'#f3caa2', hair:'#2a2424', cloth:'#ffffff', cloth2:'#3a3a3a', hairStyle:'short', hat:'chef', outfit:'chef', mouth:'open', eye:'#3a2418'},
-  mom:    {skin:'#fad8ba', hair:'#2e211b', cloth:'#d3a0e0', cloth2:'#6a4a75', hairStyle:'long', outfit:'dress', fem:true, eye:'#4a2c20'},
+  mom:    {skin:'#fad8ba', hair:'#2e211b', cloth:'#d3a0e0', cloth2:'#6a4a75', hairStyle:'long', outfit:'dress', fem:true, eye:'#4a2c20', sprite:'seeun'},
   dad:    {skin:'#f3c9a0', hair:'#231c1c', cloth:'#4a78a8', cloth2:'#26364a', hairStyle:'short', outfit:'shirt', eye:'#3a2418'},
   nurse:  {skin:'#f8d4b4', hair:'#2a2424', cloth:'#fdfdff', cloth2:'#8ec9e0', hairStyle:'bun', hat:'nurse', outfit:'nurse', fem:true, eye:'#3a2a20'},
   doctor: {skin:'#f3caa2', hair:'#2a2424', cloth:'#f4f8fc', cloth2:'#5a7aa0', hairStyle:'short', outfit:'doctor', eye:'#3a2418'},

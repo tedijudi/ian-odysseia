@@ -504,7 +504,30 @@ function fillStroke(fill, lw=2){ ctx.fillStyle=fill; ctx.fill(); ctx.lineWidth=l
 function limb(x1,y1,x2,y2,color,w){ ctx.lineCap='round'; ctx.strokeStyle=OL; ctx.lineWidth=w+3; ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); ctx.strokeStyle=color; ctx.lineWidth=w; ctx.stroke(); }
 function shadow(x,y,rx=15){ ctx.fillStyle='rgba(0,0,0,.22)'; ctx.beginPath(); ctx.ellipse(x,y,rx,4.5,0,0,Math.PI*2); ctx.fill(); }
 
+/* ---------------- 도트 스프라이트 ---------------- */
+const PX={};
+Object.entries(SPRITES).forEach(([k,d])=>{ const img=new Image(); img.src=d.src; PX[k]={...d, img, ok:false}; img.onload=()=>{ PX[k].ok=true; }; });
+function spriteFrame(k, o){
+  const t=o.t||0, seed=o.seed||0;
+  if(o.frame) return o.frame;
+  if(o.moving && PX[k].frames.includes('walk1')) return Math.floor(t/8)%2 ? 'walk1' : 'walk2';
+  if(Math.floor((t+seed*13)/7)%34===33) return 'blink';
+  if(o.talk && PX[k].frames.includes('talk')) return Math.floor(t/9)%2 ? 'talk' : 'idle';
+  return Math.floor((t+seed)/38)%2 ? 'breath' : 'idle';
+}
+function drawSprite(k, x, footY, o={}, c=ctx){
+  const d=PX[k]; if(!d || !d.ok) return false;
+  const fi=Math.max(0, d.frames.indexOf(spriteFrame(k,o))), sc=d.scale*(o.scale||1);
+  const w=d.w*sc, h=d.h*sc, hop = o.moving ? Math.abs(Math.sin((o.t||0)*0.32))*1.6 : 0;
+  c.fillStyle='rgba(0,0,0,.22)'; c.beginPath(); c.ellipse(x, footY+1, w*0.3, 4.2, 0, 0, Math.PI*2); c.fill();
+  c.save(); c.imageSmoothingEnabled=false;
+  c.translate(x, footY-hop); if(o.facingRight===false) c.scale(-1,1);
+  c.drawImage(d.img, fi*d.w, 0, d.w, d.h, -w/2, -h+1, w, h);
+  c.restore();
+  return true;
+}
 function drawChibi(x, footY, pal, o){
+  if(pal.sprite && drawSprite(pal.sprite, x, footY, {seed:x|0, ...o})) return;
   AV.draw(ctx, x, footY, {...pal, eye:pal.eye||'#3a2418'}, {seed:x|0, ...o}, CH_SCALE);
 }
 
@@ -1000,7 +1023,9 @@ function collect(pk){
 }
 
 /* ---------------- NPC 대화 ---------------- */
+let talkingTo=null;
 function tryTalk(npc){
+  talkingTo=npc.id;
   sfx.interact(); spawnBurst(npc.x, npc.y-50, '#ffe27a', 12);
   if(npc.x!==P.x) P.facing = npc.x>P.x?1:-1;
   showDialogue(npc.lines, ()=>onNpcDone(npc));
@@ -1109,6 +1134,30 @@ function sizeMinimap(){
   miniCanvas.style.width=mmW+'px'; miniCanvas.style.height=mmH+'px';
   miniCanvas.width=mmW*dpr; miniCanvas.height=mmH*dpr; mctx.setTransform(dpr,0,0,dpr,0,0);
 }
+/* 프로필 창 — 떠 있는 섬 위의 세은 · 이안 (코스튬 미리보기 느낌) */
+function drawProfileStage(){
+  const cv=$('pfStage'); if(!cv) return;
+  const c=cv.getContext('2d'), W=cv.width, H=cv.height;
+  let g=c.createLinearGradient(0,0,0,H); g.addColorStop(0,'#7fc4f0'); g.addColorStop(1,'#d8efff'); c.fillStyle=g; c.fillRect(0,0,W,H);
+  c.fillStyle='rgba(255,255,255,.9)';
+  [[60,40,22],[84,34,16],[40,46,14],[290,54,20],[312,48,14],[270,58,12]].forEach(([x,y,r])=>{ c.beginPath(); c.arc(x,y,r,0,Math.PI*2); c.fill(); });
+  // 떠 있는 섬
+  const ix=W/2, iy=150;
+  c.fillStyle='#7a5a40'; c.beginPath(); c.moveTo(ix-96,iy); c.quadraticCurveTo(ix-60,iy+34,ix-18,iy+40); c.lineTo(ix,iy+54); c.lineTo(ix+18,iy+40); c.quadraticCurveTo(ix+60,iy+34,ix+96,iy); c.closePath(); c.fill();
+  c.fillStyle='#5e4430'; c.beginPath(); c.moveTo(ix-40,iy+20); c.lineTo(ix-20,iy+34); c.lineTo(ix-8,iy+22); c.closePath(); c.fill();
+  g=c.createLinearGradient(0,iy-10,0,iy+8); g.addColorStop(0,'#9fdc6a'); g.addColorStop(1,'#5fa83c'); c.fillStyle=g;
+  c.beginPath(); c.ellipse(ix,iy,100,11,0,0,Math.PI*2); c.fill();
+  c.fillStyle='#bff08e'; c.beginPath(); c.ellipse(ix-10,iy-4,70,4,0,0,Math.PI*2); c.fill();
+  c.fillStyle='#4f9a34'; for(let x=ix-92;x<ix+92;x+=9){ c.beginPath(); c.moveTo(x,iy+8); c.lineTo(x+3,iy+14+((x*7)|0)%5); c.lineTo(x+6,iy+8); c.fill(); }
+  [[ix-70,iy-6,'#ff9ab8'],[ix+74,iy-5,'#ffe27a'],[ix+58,iy-3,'#ffffff']].forEach(([x,y,col])=>{ c.fillStyle=col; c.beginPath(); c.arc(x,y,3,0,Math.PI*2); c.fill(); c.fillStyle='#fff6a0'; c.beginPath(); c.arc(x,y,1.2,0,Math.PI*2); c.fill(); });
+  const put=(k, x, frame, sc)=>{ const d=PX[k]; if(!d||!d.ok) return; c.save(); c.imageSmoothingEnabled=false; const fi=d.frames.indexOf(frame);
+    c.fillStyle='rgba(0,0,0,.2)'; c.beginPath(); c.ellipse(x,iy-2,d.w*sc*0.3,4,0,0,Math.PI*2); c.fill();
+    c.drawImage(d.img, fi*d.w, 0, d.w, d.h, Math.round(x-d.w*sc/2), Math.round(iy-2-d.h*sc), d.w*sc, d.h*sc); c.restore(); };
+  put('seeun', ix-34, 'idle', 2); put('ian', ix+38, 'happy', 2);
+  c.font=`bold 11px ${SANS}`; c.textAlign='center';
+  [['세은',ix-34],[PROFILE.name,ix+38]].forEach(([t,x])=>{ const w=c.measureText(t).width+12; c.fillStyle='rgba(20,14,40,.78)'; c.fillRect(x-w/2,iy+14,w,16); c.fillStyle='#fff'; c.fillText(t,x,iy+26); });
+  if(!PX.seeun.ok || !PX.ian.ok) setTimeout(drawProfileStage, 200);
+}
 function drawMinimap(){
   const m=map; if(!m) return;
   const sx=(mmW-8)/m.W, sy=(mmH-8)/m.H, ox=4, oy=4;
@@ -1209,7 +1258,8 @@ function renderWin(){
   } else if(winOpen==='profile'){
     $('winTitle').textContent='👶 프로필';
     const li=levelInfo(save.exp), days=$('dday').textContent;
-    body.innerHTML=`<div class="pf-top"><div class="pf-orb"><img src="images/ian.webp" alt=""></div>
+    body.innerHTML=`<canvas id="pfStage" class="pf-stage" width="360" height="190"></canvas>
+      <div class="pf-top"><div class="pf-orb"><img src="images/ian.webp" alt=""></div>
       <div><div class="pf-name">${escapeHtml(PROFILE.name)} <small>${escapeHtml(PROFILE.english)}</small></div>
       <div class="pf-sub">Lv.${li.lv} · ${escapeHtml(PROFILE.title)} · D+${days}</div></div></div>
       <table class="pf-table">
@@ -1220,6 +1270,7 @@ function renderWin(){
         <tr><th>이름의 뜻</th><td>${escapeHtml(PROFILE.meaning)}</td></tr>
         <tr><th>모은 추억</th><td>${save.exp} · 아이템 ${allBagItems().length}개</td></tr>
       </table>`;
+    drawProfileStage();
   }
 }
 
@@ -1372,7 +1423,7 @@ function drawNpc(n){
   const pal=PALETTES[n.palette]||PALETTES.suit;
   if(n.look==='sphinx') drawSphinx(n.x, n.y, globalT);
   else if(n.object) drawObject(n.x, n.y, n.object, globalT);
-  else drawChibi(n.x, n.y, pal, {t:globalT, moving:false, facingRight:P.x>n.x});
+  else drawChibi(n.x, n.y, pal, {t:globalT, moving:false, facingRight:P.x>n.x, talk: dialogueOpen && talkingTo===n.id && curLine && curLine.speaker===n.palette && typing});
   const head = n.look==='sphinx' ? n.y-128 : n.object ? n.y-84 : n.y-AV.height(pal)*CH_SCALE-12;
   drawMarker(n.x, head, globalT, done, isNear, null);
   nameTag(n.x, n.y, n.label, false);
@@ -1380,7 +1431,12 @@ function drawNpc(n){
 function drawPlayer(){
   const k=playerKind(), blink=P.hurt>0 && Math.floor(P.hurt/4)%2===0;
   if(!blink){
-    if(k==='baby'){ if(P.onGround) shadow(P.x, P.y+1, 12); drawBaby(P.x, P.y-30, P.t, P.moving||!!P.rope, P.facing>0, 1.1); }
+    if(k==='baby'){
+      const nearNpc = near && near.type==='npc';
+      if(run.key==='womb' || !drawSprite('ian', P.x, P.y, {t:P.t, moving:P.moving, facingRight:P.facing>0, frame: nearNpc&&!P.moving ? 'happy' : null})){
+        if(P.onGround) shadow(P.x, P.y+1, 12); drawBaby(P.x, P.y-30, P.t, P.moving||!!P.rope, P.facing>0, 1.1);
+      }
+    }
     else drawChibi(P.x, P.y, PALETTES.dad, {t:P.t, moving:P.moving, facingRight:P.facing>0, aim:P.aim||0,
       air:!P.onGround && !P.rope, climb:!!P.rope, climbY:P.y, hurt:P.hurt>50, gear: combatOn() ? save.equip : {}});
   }
