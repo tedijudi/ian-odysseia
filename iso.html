@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="robots" content="noindex">
-<title>ODYSSEIA · 새 그래픽 미리보기</title>
+<title>ODYSSEIA · 1장 에로스의 화살</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏹</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -97,12 +97,43 @@ body{ font-family:var(--sans); color:#eef0f6; user-select:none; -webkit-user-sel
   .bubble .nm{ left:112px; } .bubble.right .nm{ right:112px; }
   #unit .hp{ width:84px; }
 }
+
+/* 미션 창 */
+#quest{ position:absolute; top:calc(52px + env(safe-area-inset-top,0px)); left:calc(12px + env(safe-area-inset-left,0px)); z-index:5; min-width:190px; max-width:min(300px,56vw); padding:9px 14px 10px 14px;
+  border-left:3px solid var(--gold); border-radius:4px 8px 8px 4px; background:linear-gradient(90deg,rgba(34,38,56,.9),rgba(34,38,56,.55)); box-shadow:0 3px 10px rgba(0,0,0,.35); display:none; }
+#quest.on{ display:block; animation:qin .4s ease; }
+#quest small{ display:block; font-size:10px; letter-spacing:2px; color:var(--gold); }
+#quest b{ display:block; font-family:var(--serif); font-size:15px; color:#f6efdc; margin-top:1px; }
+#quest span{ display:block; font-size:12px; color:#cfd2e0; margin-top:3px; line-height:1.45; }
+#quest em{ font-style:normal; color:#ffd88a; font-weight:700; margin-left:4px; }
+@keyframes qin{ from{ transform:translateX(-12px); opacity:0; } }
+/* 연출 */
+#fade{ position:absolute; inset:0; z-index:12; background:#07060d; opacity:1; pointer-events:none; transition:opacity .5s; }
+#fade:not(.on){ opacity:0; }
+#title{ position:absolute; left:50%; top:40%; transform:translate(-50%,-50%); z-index:11; text-align:center; pointer-events:none; opacity:0; transition:opacity .6s; padding:18px 70px;
+  background:radial-gradient(ellipse at center,rgba(20,18,36,.78),rgba(20,18,36,0) 70%); }
+#title.on{ opacity:1; }
+#title .ln{ width:min(360px,60vw); height:1px; margin:10px auto; background:linear-gradient(90deg,transparent,var(--gold),transparent); }
+#titleT{ font-family:var(--serif); font-size:clamp(26px,5.5vw,40px); color:#fbf4e2; letter-spacing:4px; text-shadow:0 2px 12px rgba(0,0,0,.6); }
+#titleS{ font-size:13px; color:#e8d8b0; letter-spacing:2px; }
+#app.cut #joy, #app.cut #btns{ opacity:0; pointer-events:none; }
+#joy, #btns{ transition:opacity .3s; }
+#app:not(.armed) #bAtk, #app:not(.armed) #bSkill{ display:none; }
+/* 선택지 */
+.choices{ position:absolute; left:50%; bottom:12%; transform:translateX(-50%); z-index:9; display:flex; flex-direction:column; gap:8px; width:min(420px,80vw); }
+.choices button{ display:flex; align-items:center; gap:12px; padding:11px 16px; border-radius:6px; border:1px solid var(--gold); cursor:pointer; text-align:left;
+  background:linear-gradient(180deg,rgba(58,64,86,.95),rgba(34,38,56,.95)); color:#f4ecd8; font-family:var(--sans); font-size:14px; font-weight:700; box-shadow:0 4px 12px rgba(0,0,0,.45); }
+.choices button i{ font-style:normal; width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--gold2); color:#2a2010; font-size:12px; }
+.bubble.muse{ background:linear-gradient(180deg,rgba(236,230,248,.97),rgba(218,210,236,.97)); }
+.bubble.muse .nm{ background:linear-gradient(180deg,#d8c8f0,#a890d0); color:#2a1a44; }
+.card .go.sub{ background:transparent; color:#e8cf96; }
+@media (orientation:portrait){ #quest{ top:calc(96px + env(safe-area-inset-top,0px)); max-width:62vw; } .choices{ bottom:8%; } }
 </style>
 </head>
 <body>
 <div id="app">
   <canvas id="view"></canvas>
-  <div id="topL"><button class="rbtn" id="menuBtn" title="지도로">☰</button><div class="pill"><i>🏹</i><span id="mapName">회사 앞 거리</span></div><div class="pill" id="obj"></div></div>
+  <div id="topL"><button class="rbtn" id="menuBtn" title="지도로">☰</button><div class="pill"><i>🏹</i><span id="mapName">회사 앞 거리</span></div></div>
   <div id="unit"><div class="face"><canvas id="uFace" width="40" height="40"></canvas></div><div><b id="uName">전시현</b><div style="display:flex;align-items:center"><div class="hp"><i id="uHp" style="width:100%"></i></div><small id="uHpT">100/100</small></div></div></div>
   <div id="banner"><i>◆</i><span id="bannerT"></span><i>◆</i></div>
   <div id="joy"><div id="knob"></div></div>
@@ -111,25 +142,29 @@ body{ font-family:var(--sans); color:#eef0f6; user-select:none; -webkit-user-sel
     <button class="cbtn" id="bSkill"><span>✦</span><small>화살비</small><i class="cd"></i></button>
     <button class="cbtn off" id="bAtk"><span>🏹</span><small>공격</small><i class="cd"></i></button>
   </div>
+  <div id="quest"></div>
   <div id="dlg"></div>
   <div id="toast"></div>
   <div class="card" id="introCard">
-    <small>CHAPTER 01 · 새 그래픽 미리보기</small>
-    <h1>에로스의 화살</h1><div class="ln"></div>
-    <p id="introMyth"></p>
-    <button class="go">여정 시작</button>
+    <small id="introSmall">CHAPTER 01</small>
+    <h1 id="introTitle">에로스의 화살</h1><div class="ln"></div>
+    <p id="introText"></p>
+    <button class="go" id="startBtn">처음부터</button>
+    <button class="go sub" id="resumeBtn" style="display:none"></button>
   </div>
   <div class="card" id="endCard">
-    <small>PREVIEW CLEAR</small>
-    <h1>회사 앞 거리</h1><div class="ln"></div>
-    <p>새 그래픽 미리보기는 여기까지예요.
-마음에 들면 모든 장을 이 방식으로 옮길게요.</p>
-    <button class="go" id="replayBtn">한 번 더</button>
-    <button class="go" id="homeBtn" style="background:transparent;color:#e8cf96">지금 게임으로</button>
+    <small id="endSmall"></small>
+    <h1 id="endTitle"></h1><div class="ln"></div>
+    <p id="endText"></p>
+    <button class="go" id="replayBtn">1장 다시 하기</button>
+    <button class="go sub" id="homeBtn">여정의 지도로</button>
   </div>
+  <div id="title"><div id="titleT"></div><div class="ln"></div><div id="titleS"></div></div>
+  <div id="fade"></div>
 </div>
 <script src="js/story.js"></script>
 <script src="js/avatar.js"></script>
-<script src="js/iso.js"></script>
+<script src="js/ch1.js"></script>
+<script src="js/saga.js"></script>
 </body>
 </html>

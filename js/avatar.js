@@ -32,9 +32,18 @@ function outfitOf(p){
 }
 
 /* ---------- 부위 ---------- */
+let SHORT_SLEEVE=false;
 function arm(c, sx, sy, ex, ey, sleeve, skin){
   c.lineCap='round';
   c.strokeStyle=OL; c.lineWidth=7.6; line(c,sx,sy,ex,ey);
+  if(SHORT_SLEEVE){
+    c.strokeStyle=skin; c.lineWidth=5.1; line(c,sx,sy,ex,ey);
+    const mx=sx+(ex-sx)*.42, my=sy+(ey-sy)*.42;
+    c.strokeStyle=OL; c.lineWidth=8.2; line(c,sx,sy,mx,my);
+    c.strokeStyle=sleeve; c.lineWidth=6; line(c,sx,sy,mx,my);
+    c.strokeStyle=dk(sleeve,.35); c.lineWidth=1.2; line(c,mx-(ey-sy)*.08,my+(ex-sx)*.08,mx+(ey-sy)*.08,my-(ex-sx)*.08);
+    ell(c,ex,ey,2.9,2.9); fs(c,skin,1.3); return;
+  }
   c.strokeStyle=sleeve; c.lineWidth=5.1; line(c,sx,sy,ex,ey);
   c.strokeStyle=lt(sleeve,.28); c.lineWidth=1.4; line(c,sx+.6,sy-1.2,(sx+ex)/2+.6,(sy+ey)/2-1.2);
   ell(c,ex,ey,2.9,2.9); fs(c,skin,1.3);
@@ -66,7 +75,14 @@ function torso(c, p, of){
   torsoPath(c, k==='doctor'||k==='chef'); fs(c, of.top, 1.6);
   shadeTorso(c);
   c.lineCap='round';
-  if(k==='shirt'){
+  if(k==='polo'){
+    const nv=p.collar||dk(of.top,.45);
+    c.fillStyle=nv; c.beginPath(); c.moveTo(-5.2,-34.8); c.lineTo(-.6,-30.4); c.lineTo(-1.6,-35.2); c.closePath(); c.fill(); c.strokeStyle=OL; c.lineWidth=1; c.stroke();
+    c.beginPath(); c.moveTo(5.2,-34.8); c.lineTo(.6,-30.4); c.lineTo(1.6,-35.2); c.closePath(); c.fill(); c.stroke();
+    c.strokeStyle=dk(of.top,.3); c.lineWidth=1; line(c,.2,-31,.2,-26.5);
+    c.fillStyle=lt(of.top,.55); [-29.6,-27.4].forEach(y=>{ ell(c,1.2,y,.7,.7); c.fill(); });
+    c.fillStyle=lt(of.top,.18); for(let y=-33;y<-16;y+=2) for(let x=-8+(y&2?1:0);x<8;x+=2){ c.fillRect(x,y,.6,.6); }
+  } else if(k==='shirt'){
     c.fillStyle='#f6f2ea'; c.beginPath(); c.moveTo(-4.4,-34.5); c.lineTo(0,-30.6); c.lineTo(-1.2,-34.8); c.closePath(); c.fill(); c.strokeStyle=OL; c.lineWidth=1; c.stroke();
     c.beginPath(); c.moveTo(4.4,-34.5); c.lineTo(.2,-30.6); c.lineTo(1.4,-34.8); c.closePath(); c.fill(); c.stroke();
     c.strokeStyle=dk(of.top,.25); c.lineWidth=1; line(c,.2,-30.5,.2,-17.5);
@@ -143,6 +159,11 @@ function hairBack(c, p, t, walkSway){
     c.lineTo(-6,-30); c.lineTo(10,-31); c.quadraticCurveTo(15,-26,19,-28); c.quadraticCurveTo(20,-46,15,-64); c.closePath();
     fs(c, vgrad(c,-64,-20,H,dk(p.hair,.3)), 1.6);
     c.strokeStyle=dk(p.hair,.35); c.lineWidth=.9; line(c,-15,-46,-16,-27); line(c,-10,-40,-11,-24);
+  } else if(s==='medium'){
+    c.beginPath(); c.moveTo(-14,-64); c.quadraticCurveTo(-22,-48,-19,-35+walkSway*.5); c.quadraticCurveTo(-15,-31,-10,-34);
+    c.lineTo(-6,-38); c.lineTo(10,-38); c.quadraticCurveTo(15,-33,19,-35); c.quadraticCurveTo(20,-50,15,-64); c.closePath();
+    fs(c, vgrad(c,-64,-32,H,dk(p.hair,.3)), 1.6);
+    c.strokeStyle=dk(p.hair,.35); c.lineWidth=.9; line(c,-15,-50,-16,-37);
   } else if(s==='bun'){
     ell(c,-10.5,-66.5,7.2,7); fs(c, hairFill(c,p), 1.6);
     c.strokeStyle=lt(p.hair,.35); c.lineWidth=1.1; c.beginPath(); c.arc(-10.5,-66.5,4.4,1.1*PI,1.7*PI); c.stroke();
@@ -160,8 +181,20 @@ function hairFront(c, p){
   const s=p.hairStyle||'short';
   c.lineJoin='round';
   c.beginPath();
-  if(s==='long'||s==='bun'||s==='pony'){
-    const low = s==='long' ? -36 : -45;
+  if(s==='swept'){
+    c.moveTo(-15.6,-45);
+    c.quadraticCurveTo(-19.5,-62,-10,-69.5);
+    c.quadraticCurveTo(0,-77,12,-70.5);
+    c.quadraticCurveTo(19.5,-64,18,-52);
+    c.quadraticCurveTo(16.6,-49,15.2,-50.5);
+    c.quadraticCurveTo(15,-55,11.5,-57.5);
+    c.quadraticCurveTo(7,-54.6,3.4,-58.8);
+    c.quadraticCurveTo(-1,-61.4,-5.6,-59.6);
+    c.quadraticCurveTo(-9.6,-57.8,-11.6,-52);
+    c.lineTo(-12.9,-46);
+    c.closePath();
+  } else if(s==='long'||s==='bun'||s==='pony'||s==='medium'){
+    const low = s==='long' ? -36 : s==='medium' ? -40 : -45;
     c.moveTo(-16,-42);
     c.quadraticCurveTo(-19.5,-61,-9,-67);
     c.quadraticCurveTo(3,-73.5,13.4,-66);
@@ -194,7 +227,8 @@ function hairFront(c, p){
   }
   // 윤기
   c.strokeStyle=lt(p.hair,.5); c.lineWidth=1.7; c.lineCap='round';
-  c.beginPath(); c.moveTo(-9,-63.5); c.quadraticCurveTo(-1,-68.5,8,-65); c.stroke();
+  if(s==='swept'){ c.beginPath(); c.moveTo(-8,-66); c.quadraticCurveTo(1,-72.5,11,-67); c.stroke(); c.strokeStyle=dk(p.hair,.3); c.lineWidth=1; c.beginPath(); c.moveTo(-3,-60.5); c.quadraticCurveTo(4,-66,13,-62); c.stroke(); c.strokeStyle=lt(p.hair,.5); c.lineWidth=1.7; }
+  else { c.beginPath(); c.moveTo(-9,-63.5); c.quadraticCurveTo(-1,-68.5,8,-65); c.stroke(); }
   c.strokeStyle=lt(p.hair,.3); c.lineWidth=1; c.beginPath(); c.moveTo(-5,-61.3); c.quadraticCurveTo(0,-63.6,4.5,-62.5); c.stroke();
 }
 function backHead(c, p){
@@ -325,9 +359,9 @@ function wings(c, t, x){
 }
 
 /* ---------- 전체 ---------- */
-function height(p){ return (p.hat==='chef'?86 : p.hat==='nurse'?76 : 73) + (p.float?20:0); }
+function height(p){ return (p.hat==='chef'?86 : p.hat==='nurse'?76 : p.hairStyle==='swept'?77 : 73) + (p.float?20:0); }
 function draw(c, x, footY, p, o={}, S=1){
-  const t=o.t||0, of=outfitOf(p);
+  const t=o.t||0, of=outfitOf(p); SHORT_SLEEVE=!!p.shortSleeve;
   const moving=!!o.moving, air=!!o.air, climb=!!o.climb, aim=o.aim||0;
   const gear=o.gear||{};
   const ph=t*.32, sw=moving?Math.sin(ph):0;
