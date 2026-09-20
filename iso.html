@@ -85,9 +85,12 @@ body{ font-family:var(--sans); color:#eef0f6; user-select:none; -webkit-user-sel
 .card .go{ margin-top:10px; padding:10px 32px; border-radius:6px; border:1px solid var(--gold); background:linear-gradient(180deg,#e8cf96,#b8965a); color:#2a2010; font-weight:700; font-size:14px; cursor:pointer; }
 #endCard{ display:none; }
 @media (orientation:portrait){
-  #topL{ flex-wrap:wrap; max-width:calc(100% - 24px); }
+  #topL{ flex-wrap:wrap; max-width:calc(100% - 150px); row-gap:6px; }
   #topL #obj{ order:3; }
-  #unit{ top:calc(56px + env(safe-area-inset-top,0px)); padding:6px 10px; }
+  #unit{ top:calc(10px + env(safe-area-inset-top,0px)); padding:5px 9px 5px 5px; gap:7px; }
+  #unit .face{ width:32px; height:32px; }
+  #unit .hp{ width:66px; }
+  #unit small{ display:none; }
   .bubble{ width:88vw; padding:16px 16px 14px 112px; font-size:14px; }
   .bubble.left{ left:6vw; top:10%; } .bubble.right{ right:6vw; bottom:30%; padding:16px 112px 14px 16px; }
   .bubble .port{ width:112px; height:130px; } .bubble .port img{ height:130px; } .bubble .port canvas{ height:118px; }

@@ -354,3 +354,14 @@ const WOMB = {
   ],
   enemyMsg:"포세이돈의 잔물결을 사뿐히 넘었다 💧"
 };
+
+
+/* 쿼터뷰 미리보기(iso.html) 전용 — 맵 곳곳에 숨은 '뮤즈의 쪽지' (스토리 바이블 · 숨은 이야기) */
+const ISO_EXTRA = {
+  chapter1: [
+    { id:'note1', label:"뮤즈의 쪽지", note:true, lines:[
+      {speaker:'muse', label:'뮤즈의 쪽지 ①', text:"에로스는 사실 그날, 화살을 두 발 쐈다.\n\n한 발은 식당의 한 남자에게. 그렇다면 — 나머지 한 발은, 누구의 심장으로 갔을까?"} ]},
+    { id:'note2', label:"뮤즈의 쪽지", note:true, lines:[
+      {speaker:'muse', label:'뮤즈의 쪽지 ②', text:"이 숲의 안개는 원래 벚꽃 향기였다.\n\n레테의 안개가 닿자 설렘은 《망설임》이 되고, 두근거림은 《수줍음》이 되었다. 안개를 걷어내면 — 향기가 돌아온다."} ]}
+  ]
+};
