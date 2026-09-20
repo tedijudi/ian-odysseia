@@ -387,6 +387,9 @@ canvas#game{ position:absolute; inset:0; width:100%; height:100%; display:block;
 .ctl::after{ content:''; position:absolute; left:18%; right:18%; top:7%; height:30%; border-radius:50%; background:linear-gradient(180deg,rgba(255,255,255,.55),rgba(255,255,255,0)); pointer-events:none; }
 .ctl{ position:relative; }
 .pf-stage{ display:block; width:100%; height:auto; aspect-ratio:360/190; border-radius:8px; margin-bottom:12px; image-rendering:pixelated; border:1px solid #e2b75a; box-shadow:0 0 0 1px #3a2a10, inset 0 0 0 1px rgba(255,255,255,.2); }
+.isoLink{ display:inline-block; margin-top:14px; padding:9px 18px; border-radius:20px; font-size:13px; font-weight:700; color:#f3e2b6; text-decoration:none;
+  background:linear-gradient(180deg,rgba(70,78,104,.85),rgba(34,38,56,.9)); border:1px solid rgba(201,168,106,.8); box-shadow:inset 0 1px 0 rgba(255,255,255,.15), 0 4px 14px rgba(0,0,0,.35); letter-spacing:.3px; }
+.isoLink:active{ transform:translateY(1px); }
 </style>
 </head>
 <body>
@@ -401,6 +404,7 @@ canvas#game{ position:absolute; inset:0; width:100%; height:100%; display:block;
     <p class="sub">뮤즈여, 노래하소서 — 작은 영웅의 여정을</p>
     <div class="dday">D+<span id="dday"></span></div>
     <button class="btn" id="startBtn" disabled>불러오는 중…</button>
+    <a class="isoLink" href="iso.html">✨ 새 그래픽 미리보기 · 쿼터뷰 실시간 전투</a>
     <div class="loadbar" id="loadbar"><i id="loadFill"></i></div>
   </div>
 </section>
