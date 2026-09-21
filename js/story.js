@@ -27,6 +27,9 @@ const ITEMS = {
   hourglass:{ icon:"⏳", name:"기다림의 모래시계", desc:"남은 시간 여덟 달.\n곁에 누군가 있으면 모래가 조금 더 빨리 흐른다." },
   ultra:  { icon:"🩻", name:"첫 초음파 사진", desc:"꼬물거리는 손발을 처음 본 날의 전율.\n화면 속 작은 별이 손가락을 폈다 쥐었다 했다." },
   fukuoka:{ icon:"🏮", name:"후쿠오카의 밤바람", desc:"세 식구가 함께 떠난 첫 해외여행.\n야타이 불빛 아래에서 배에 대고 속삭이던 밤." },
+  kkulzam:{ icon:"🌙", name:"꿀잠 한 조각", desc:"잠의 신 히프노스가 건네준 귀한 선물.\n아껴 써야 한다. 신들도 귀하게 여기는 것이니까." },
+  rattle: { icon:"🧸", name:"첫 장난감", desc:"매트 위의 대항해 끝에 손에 쥔 첫 보물.\n까르르, 처음 듣는 웃음소리와 함께." },
+  mirror_photo:{ icon:"🪞", name:"거울 속 세 식구", desc:"아기띠를 멘 아빠, 휴대폰을 든 엄마,\n그 사이에서 거울을 바라보는 작은 영웅." },
   album:  { icon:"📱", name:"휴대폰 사진첩", desc:"어느새 가득 쌓인 두 사람의 사진.\n'우리, 진짜 많이도 웃었다.'" },
   oracle: { icon:"📜", name:"이름의 신탁", desc:"이안 — 기쁘고 평안하라.\n영문으로는 Ian.\n세상에서 유일한 존재가 된 날 받은 이름." }
 };
@@ -86,6 +89,7 @@ const PORTRAITS = {
   sphinx:         { img:"", emoji:"🦁", name:"스핑크스" },
   aeolus:         { img:"", emoji:"🌬️", name:"바람의 신 아이올로스" },
   siren:          { img:"", emoji:"🧜‍♀️", name:"세이렌" },
+  hypnos:         { img:"", emoji:"😴", name:"잠의 신 히프노스" },
   cyclops:        { img:"", emoji:"👁️", name:"외눈의 거인 폴리페모스" },
   eris:           { img:"", emoji:"🍎", name:"불화의 여신 에리스" },
   hera:           { img:"", emoji:"👑", name:"결혼의 여신 헤라" },
@@ -126,6 +130,7 @@ const PALETTES = {
   hera:   {skin:'#fde8d8', hair:'#e8dcc0', cloth:'#f6f0e2', cloth2:'#d8c890', hairStyle:'long', outfit:'robe', fem:true, hat:'laurel', eye:'#8a6a3a', glow:true},
   moira2: {skin:'#f6e2d0', hair:'#e8e2f0', cloth:'#dcd2f0', cloth2:'#8a7ab0', hairStyle:'long', outfit:'robe', fem:true, eye:'#6a5a8a', glow:true},
   moira3: {skin:'#f2dcc8', hair:'#c8c4d8', cloth:'#b8aed0', cloth2:'#5a4a78', hairStyle:'bun', outfit:'robe', fem:true, eyes:'smile', old:true, glow:true},
+  hypnos: {skin:'#f4e2d4', hair:'#c8d0f0', cloth:'#3a4a8a', cloth2:'#22306a', hairStyle:'curly', outfit:'robe', eyes:'smile', mouth:'open', glow:true, wings:true, float:true},
   siren:  {skin:'#e8f4f0', hair:'#6fe0d0', cloth:'#5ac8e0', cloth2:'#2a8ab0', hairStyle:'long', outfit:'robe', fem:true, eye:'#2a8a9a', glow:true}
 };
 

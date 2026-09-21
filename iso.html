@@ -140,6 +140,13 @@ body{ font-family:var(--sans); color:#eef0f6; user-select:none; -webkit-user-sel
 #chSelect{ margin-top:18px; display:flex; flex-wrap:wrap; justify-content:center; gap:6px 8px; max-width:520px; }
 #chSelect a{ font-size:12px; color:#d8cfb8; text-decoration:none; padding:5px 10px; border:1px solid rgba(201,168,106,.45); border-radius:14px; background:rgba(34,38,56,.6); }
 #chSelect a.on{ color:#2a2010; background:linear-gradient(180deg,#f2d48a,#c9a15a); border-color:#f2d48a; font-weight:700; }
+
+#photoCard{ position:absolute; inset:0; z-index:11; display:flex; align-items:center; justify-content:center; background:rgba(10,8,20,.72); opacity:0; pointer-events:none; transition:opacity .5s; }
+#photoCard.on{ opacity:1; pointer-events:auto; }
+#photoCard .frame{ background:#f8f4ec; padding:12px 12px 10px; border-radius:4px; box-shadow:0 12px 40px rgba(0,0,0,.6); transform:rotate(-2deg); text-align:center; max-width:88vw; }
+#photoCard canvas{ display:block; width:min(520px,80vw); height:auto; image-rendering:pixelated; border:1px solid #d8d0c0; }
+#photoCard p{ margin:8px 0 0; font-family:var(--serif); font-size:17px; color:#3a2a20; letter-spacing:2px; }
+#photoCard small{ color:#8a7a68; font-size:11px; }
 </style>
 </head>
 <body>
@@ -175,6 +182,7 @@ body{ font-family:var(--sans); color:#eef0f6; user-select:none; -webkit-user-sel
     <button class="go sub" id="homeBtn">여정의 지도로</button>
   </div>
   <div id="title"><div id="titleT"></div><div class="ln"></div><div id="titleS"></div></div>
+  <div id="photoCard"><div class="frame"><canvas id="photoCv" width="520" height="360"></canvas><p>거울 속 세 식구</p><small>화면을 누르면 계속</small></div></div>
   <div id="fade"></div>
 </div>
 <script src="js/story.js"></script>
@@ -184,6 +192,7 @@ body{ font-family:var(--sans); color:#eef0f6; user-select:none; -webkit-user-sel
 <script src="js/ch3.js"></script>
 <script src="js/ch4.js"></script>
 <script src="js/ch5.js"></script>
+<script src="js/ch6.js"></script>
 <script src="js/saga.js"></script>
 </body>
 </html>
