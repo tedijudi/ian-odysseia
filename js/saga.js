@@ -5,7 +5,7 @@
 (function(){
 'use strict';
 const $=id=>document.getElementById(id);
-const CHAPTERS_ISO={ 1:typeof CH1!=='undefined'?CH1:null, 2:typeof CH2!=='undefined'?CH2:null, 3:typeof CH3!=='undefined'?CH3:null, 4:typeof CH4!=='undefined'?CH4:null };
+const CHAPTERS_ISO={ 1:typeof CH1!=='undefined'?CH1:null, 2:typeof CH2!=='undefined'?CH2:null, 3:typeof CH3!=='undefined'?CH3:null, 4:typeof CH4!=='undefined'?CH4:null, 5:typeof CH5!=='undefined'?CH5:null };
 const CHN=Math.max(1, +(new URLSearchParams(location.search).get('ch')||1));
 const CH=CHAPTERS_ISO[CHN]||CH1;
 document.title='ODYSSEIA · '+CHN+'장 '+CH.title;
@@ -470,6 +470,15 @@ function drawCar(sx, sy, face, withPeople){
   l.restore();
 }
 
+/* 아기 이안 (사진 기반 도트: images/px/ian.png) */
+const ianImg=new Image(); ianImg.src='images/px/ian.png';
+function drawIan(sx, sy, face){
+  if(!ianImg.complete || !ianImg.naturalWidth) return;
+  const fr = P.moving ? (Math.floor(P.t/8)%2 ? 3 : 4) : (Math.floor(P.t/7)%45===44 ? 2 : (Math.floor(P.t/40)%2)), w=24, h=30, b=Math.round(Math.sin(P.t*0.08)*1.5);
+  l.save(); l.imageSmoothingEnabled=false; l.translate(Math.round(sx), Math.round(sy)-8+b); if(face<0) l.scale(-1,1);
+  l.drawImage(ianImg, fr*40, 0, 40, 50, -w/2, -h, w, h); l.restore();
+}
+
 /* ---------------- 캐릭터 도트화 ---------------- */
 const pxCache=new Map();
 function pixelize(key, w, h, draw){
@@ -515,6 +524,14 @@ function mobSprite(look, frame, flash){ return pixelize(`mob|${look}|${frame}|${
     g.fillStyle='rgba(150,120,230,.5)'; g.beginPath(); g.arc(0,-28+b,12,0,6.28); g.fill();
     return; }
   AV.mob(g, look, frame*18, flash, true, false); }); }
+function phobosSprite(frame, flash, done){
+  return pixelize(`pho|${frame}|${flash?1:0}|${done?1:0}`, 100, 110, g=>{
+    g.translate(50,104); g.scale(1.7,1.7); AV.mob(g,'shadow',frame*18,flash,true,false);
+    g.setTransform(1,0,0,1,0,0); g.translate(50,104);
+    g.font='900 18px system-ui'; g.textAlign='center'; g.fillStyle=done?'#bfe8ff':'#ff8ab0';
+    [[-30,-80],[28,-86],[-4,-100]].forEach(([x,y],k)=>{ g.fillText('?', x+Math.sin(frame+k)*2, y+Math.cos(frame*0.7+k)*2); });
+  });
+}
 function golemSprite(frame, flash, done){
   return pixelize(`gol|${frame}|${flash?1:0}|${done?1:0}`, 110, 124, g=>{
     const OL='#4a3a24', b=Math.sin(frame*0.9)*2, raise=frame===3;
@@ -689,7 +706,8 @@ function updateHud(){
   } else q.classList.remove('on');
   const armed=P.armed && hostile;
   $('bAtk').classList.toggle('off', !P.armed); $('bSkill').classList.toggle('off', !P.armed);
-  $('app').classList.toggle('armed', P.armed);
+  $('app').classList.toggle('armed', P.armed && P.form!=='ian');
+  const un=$('uName'); if(un) un.textContent = P.form==='ian' ? '이안' : '전시현';
 }
 function drawFace(){ const c=$('uFace').getContext('2d'); c.imageSmoothingEnabled=false; c.clearRect(0,0,40,40); c.fillStyle='#2a3044'; c.fillRect(0,0,40,40);
   c.drawImage(charSprite('dad','idle',0,''), CHW/2-14, Math.round(CHH-4-77*CHS)-3, 28, 28, 0, 1, 40, 40); }
@@ -785,6 +803,9 @@ async function step(st){
   else if(st.boss){ spawnBoss(st.boss, st.at); await sleep(900); }
   else if(st.shake){ shake=10; sfx.hurt(); await sleep(600); }
   else if('wind' in st){ effects.wind=st.wind; }
+  else if(st.player){ P.form = st.player==='ian' ? 'ian' : ''; updateHud(); }
+  else if(st.flash){ effects.flash=globalT; sfx.chime(); await sleep(1400); }
+  else if(st.star){ effects.star=globalT; sfx.chime(); await sleep(2200); }
   else if(st.end){ await sleep(600); showOutro(); }
 }
 function give(id){
@@ -923,7 +944,7 @@ function hurtPlayer(n, from){
 }
 
 /* ---------------- 보스: 외눈의 거인 ---------------- */
-const BOSSES={ cyclops:{hp:420, name:'외눈의 거인 폴리페모스'}, eris:{hp:360, name:'불화의 여신 에리스'}, golem:{hp:380, name:'기다림의 모래시계 골렘'} };
+const BOSSES={ cyclops:{hp:420, name:'외눈의 거인 폴리페모스'}, eris:{hp:360, name:'불화의 여신 에리스'}, golem:{hp:380, name:'기다림의 모래시계 골렘'}, phobos:{hp:340, name:'공포의 신 포보스'} };
 function spawnBoss(kind, at){
   const d=BOSSES[kind]||BOSSES.cyclops;
   boss={ kind, x:at[0], y:at[1], hp:d.hp, maxHp:d.hp, t:0, cd:90, flash:0, dead:0, gone:false, act:null, actT:0, name:d.name };
@@ -957,7 +978,7 @@ function tickBoss(){
     }
   } else {
     b.actT++;
-    if(b.act==='summon' && b.actT===30){ const lk=b.kind==='eris'?'mask':'cloud'; spawnMobs([[lk,b.x+1.5,b.y+1.5],[lk,b.x-1.5,b.y+1.8]]); }
+    if(b.act==='summon' && b.actT===30){ const lk=b.kind==='eris'?'mask':b.kind==='phobos'?'shadow':'cloud'; spawnMobs([[lk,b.x+1.5,b.y+1.5],[lk,b.x-1.5,b.y+1.8]]); }
     if(b.actT>60){ b.act=null; b.cd = b.hp<b.maxHp/2 ? 70 : 100; }
   }
   rocks.forEach(r=>{ r.t++;
@@ -994,7 +1015,7 @@ function update(){
   if(effects.confuse>0){ effects.confuse--; jx=-jx; jy=-jy; }
   if(P.moving){ const sp=(effects.car?1.9:1.0)*Math.min(1,m); const w=screenToWorld(jx/m*sp, jy/m*sp); tryMove(P,w[0],w[1]); if(Math.abs(jx)>0.15) P.face=jx>0?1:-1; }
   if(P.hurt>0) P.hurt--; if(P.atkCD>0) P.atkCD--; if(P.aim>0) P.aim--; if(P.skillCD>0) P.skillCD--;
-  if((atkQ||atkHeld) && P.atkCD<=0 && !P.dead && !effects.car) shoot();
+  if((atkQ||atkHeld) && P.atkCD<=0 && !P.dead && !effects.car && P.form!=='ian') shoot();
   if(skillQ && !P.dead) skill();
   atkQ=false; skillQ=false;
   $('bSkill').style.setProperty('--cd', (P.skillCD/360*360)+'deg');
@@ -1003,7 +1024,7 @@ function update(){
   // 가까운 대상
   near=null; let nd=1.35;
   const G=(mission && mission.goal) || {};
-  const prio=id=> (G.talk===id || G.rescue===id || G.use===id || (G.talkAll&&G.talkAll.includes(id)) || (G.useAll&&G.useAll.includes(id))) ? 0.8 : 0;
+  const prio=id=> (G.talk===id || G.rescue===id || G.use===id || (G.talkAll&&G.talkAll.includes(id)&&!talkedTo.has(id)) || (G.useAll&&G.useAll.includes(id))) ? 0.8 : 0;
   actors.forEach(a=>{ if(!a.vis) return; const d=Math.hypot(a.x-P.x,a.y-P.y), rr=a.look==='sphinx'?2.6:1.35, s2=d-prio(a.id); if(d<rr && s2<nd){ nd=s2; near={kind:'actor', o:a}; } });
   objects.forEach(o=>{ if(o.hidden || o.kind || (o.used && !o.note)) return; const d=Math.hypot(o.x-P.x,o.y-P.y), s2=d-prio(o.id); if(d<1.3 && s2<nd){ nd=s2; near={kind:'obj', o}; } });
   $('bTalk').style.display = near ? 'flex' : 'none';
@@ -1065,7 +1086,8 @@ function draw(){
     l.drawImage(mobSprite(mb.look, Math.floor(mb.t/10)%4, mb.flash>0), Math.round(sx-20), Math.round(sy-40-(mb.dead>0?(30-mb.dead)*0.5:0))); l.restore(); }}); });
   if(boss && !boss.gone) items.push({d:boss.x+boss.y, f:()=>{ const sx=isoX(boss.x,boss.y)-camX, sy=isoY(boss.x,boss.y)-camY; shadowAt(sx,sy,boss.kind==='eris'?12:26);
     l.save(); if(boss.dead>0) l.globalAlpha=Math.min(1,boss.dead/40);
-    if(boss.kind==='golem'){ l.drawImage(golemSprite(boss.act?3:Math.floor(boss.t/22)%2, boss.flash>0, boss.dead>0), Math.round(sx-55), Math.round(sy-120)); }
+    if(boss.kind==='phobos'){ l.drawImage(phobosSprite(Math.floor(boss.t/14)%4, boss.flash>0, boss.dead>0), Math.round(sx-50), Math.round(sy-104)); }
+    else if(boss.kind==='golem'){ l.drawImage(golemSprite(boss.act?3:Math.floor(boss.t/22)%2, boss.flash>0, boss.dead>0), Math.round(sx-55), Math.round(sy-120)); }
     else if(boss.kind==='eris'){ l.drawImage(erisSprite(Math.floor(boss.t/16)%4, boss.flash>0, boss.dead>0), Math.round(sx-40), Math.round(sy-92)); }
     else { const fr = boss.act==='stomp'||boss.act==='rock' ? (boss.actT<30?3:1) : Math.floor(boss.t/20)%2;
       l.drawImage(cyclopsSprite(fr, boss.flash>0, boss.dead>0), Math.round(sx-55), Math.round(sy-116)); }
@@ -1085,6 +1107,7 @@ function draw(){
   items.push({d:P.x+P.y, f:()=>{
     const sx=isoX(P.x,P.y)-camX, sy=isoY(P.x,P.y)-camY;
     if(effects.car){ drawCar(sx, sy, P.face, true); return; }
+    if(P.form==='ian'){ shadowAt(sx,sy,5); drawIan(sx, sy, P.face); return; }
     shadowAt(sx,sy,7);
     if(P.hurt>0 && Math.floor(P.hurt/4)%2===0 && !P.dead) return;
     const pose = P.aim>0 ? 'aim' : P.moving ? 'walk' : (Math.floor(P.t/7)%45===44 ? 'blink' : 'idle');
@@ -1161,6 +1184,14 @@ function draw(){
     vc.globalCompositeOperation='lighter'; vc.strokeStyle='rgba(255,220,140,.9)'; vc.lineWidth=2.2; vc.shadowColor='rgba(255,200,120,1)'; vc.shadowBlur=14; vc.beginPath();
     const mx=(x1+x2)/2, my=Math.min(y1,y2)-40-Math.sin(globalT*0.05)*6; vc.moveTo(x1,y1); vc.quadraticCurveTo(mx,my,x2,y2); vc.stroke(); vc.shadowBlur=0; vc.globalCompositeOperation='source-over';
     for(let k=0;k<3;k++){ const f=((globalT*0.01)+k/3)%1, qx=(1-f)*(1-f)*x1+2*(1-f)*f*mx+f*f*x2, qy=(1-f)*(1-f)*y1+2*(1-f)*f*my+f*f*y2; vc.fillStyle='rgba(255,250,220,.95)'; vc.beginPath(); vc.arc(qx,qy,2.5,0,6.283); vc.fill(); } } }
+  // 흰 섬광 (탄생)
+  if(effects.flash){ const k=(globalT-effects.flash)/90; if(k<1){ vc.fillStyle=`rgba(255,252,240,${k<0.25?k*4:1-(k-0.25)/0.75})`; vc.fillRect(0,0,SW,SH); } }
+  // 내려오는 별 (하늘의 할아버지)
+  if(effects.star){ const k=Math.min(1,(globalT-effects.star)/130); const [tx2,ty2]=toScreen(8.4,1.2,70); const x=tx2, y=-40+(ty2+40)*k;
+    vc.globalCompositeOperation='lighter'; const r=60*S/2*(0.6+0.4*Math.sin(globalT*0.1));
+    const g=vc.createRadialGradient(x,y,0,x,y,r*2.2); g.addColorStop(0,'rgba(255,250,220,1)'); g.addColorStop(0.2,'rgba(255,236,170,.7)'); g.addColorStop(1,'rgba(255,236,170,0)'); vc.fillStyle=g; vc.fillRect(x-r*2.2,y-r*2.2,r*4.4,r*4.4);
+    vc.fillStyle='#fffbe8'; vc.beginPath(); for(let q=0;q<10;q++){ const a=q*Math.PI/5-Math.PI/2, rr=q%2?5*S/2:13*S/2; vc.lineTo(x+Math.cos(a)*rr,y+Math.sin(a)*rr); } vc.closePath(); vc.fill();
+    vc.globalCompositeOperation='source-over'; }
   // 가장자리
   const vg=vc.createRadialGradient(SW/2,SH/2,Math.min(SW,SH)*0.35,SW/2,SH/2,Math.max(SW,SH)*0.72); vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,`rgba(30,16,60,${SC.vignette||0.3})`); vc.fillStyle=vg; vc.fillRect(0,0,SW,SH);
 
