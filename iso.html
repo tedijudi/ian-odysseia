@@ -128,6 +128,18 @@ body{ font-family:var(--sans); color:#eef0f6; user-select:none; -webkit-user-sel
 .bubble.muse .nm{ background:linear-gradient(180deg,#d8c8f0,#a890d0); color:#2a1a44; }
 .card .go.sub{ background:transparent; color:#e8cf96; }
 @media (orientation:portrait){ #quest{ top:calc(96px + env(safe-area-inset-top,0px)); max-width:62vw; } .choices{ bottom:8%; } }
+
+#bossBar{ position:absolute; left:50%; top:calc(12px + env(safe-area-inset-top,0px)); transform:translateX(-50%); z-index:6; width:min(420px,52vw); display:none; text-align:center; }
+#bossBar.on{ display:block; animation:qin .4s ease; }
+#bossName{ font-family:var(--serif); font-size:13px; color:#f4e6ff; letter-spacing:2px; text-shadow:0 1px 3px #000; margin-bottom:3px; }
+#bossBar .bar{ height:10px; border-radius:3px; background:#140f22; border:1px solid #c9a86a; box-shadow:0 2px 8px rgba(0,0,0,.5); overflow:hidden; }
+#bossFill{ height:100%; width:100%; background:linear-gradient(180deg,#d8b8ff,#8a5ae0 60%,#5a2ab0); transition:width .2s; }
+#quest em.tm{ color:#9fe0ff; }
+@media (orientation:portrait){ #bossBar{ top:calc(56px + env(safe-area-inset-top,0px)); width:80vw; } #quest{ top:calc(118px + env(safe-area-inset-top,0px)); } }
+
+#chSelect{ margin-top:18px; display:flex; flex-wrap:wrap; justify-content:center; gap:6px 8px; max-width:520px; }
+#chSelect a{ font-size:12px; color:#d8cfb8; text-decoration:none; padding:5px 10px; border:1px solid rgba(201,168,106,.45); border-radius:14px; background:rgba(34,38,56,.6); }
+#chSelect a.on{ color:#2a2010; background:linear-gradient(180deg,#f2d48a,#c9a15a); border-color:#f2d48a; font-weight:700; }
 </style>
 </head>
 <body>
@@ -143,6 +155,7 @@ body{ font-family:var(--sans); color:#eef0f6; user-select:none; -webkit-user-sel
     <button class="cbtn off" id="bAtk"><span>🏹</span><small>공격</small><i class="cd"></i></button>
   </div>
   <div id="quest"></div>
+  <div id="bossBar"><div id="bossName"></div><div class="bar"><div id="bossFill"></div></div></div>
   <div id="dlg"></div>
   <div id="toast"></div>
   <div class="card" id="introCard">
@@ -151,12 +164,14 @@ body{ font-family:var(--sans); color:#eef0f6; user-select:none; -webkit-user-sel
     <p id="introText"></p>
     <button class="go" id="startBtn">처음부터</button>
     <button class="go sub" id="resumeBtn" style="display:none"></button>
+    <div id="chSelect"></div>
   </div>
   <div class="card" id="endCard">
     <small id="endSmall"></small>
     <h1 id="endTitle"></h1><div class="ln"></div>
     <p id="endText"></p>
-    <button class="go" id="replayBtn">1장 다시 하기</button>
+    <button class="go" id="nextBtn" style="display:none"></button>
+    <button class="go sub" id="replayBtn">다시 하기</button>
     <button class="go sub" id="homeBtn">여정의 지도로</button>
   </div>
   <div id="title"><div id="titleT"></div><div class="ln"></div><div id="titleS"></div></div>
@@ -165,6 +180,9 @@ body{ font-family:var(--sans); color:#eef0f6; user-select:none; -webkit-user-sel
 <script src="js/story.js"></script>
 <script src="js/avatar.js"></script>
 <script src="js/ch1.js"></script>
+<script src="js/ch2.js"></script>
+<script src="js/ch3.js"></script>
+<script src="js/ch4.js"></script>
 <script src="js/saga.js"></script>
 </body>
 </html>

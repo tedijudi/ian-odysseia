@@ -28,6 +28,8 @@ function outfitOf(p){
   if(o==='doctor'){ base.sleeve=p.cloth; }
   if(o==='nurse'){ base.skirt=p.cloth; base.bare=true; base.shoe='#f4f4f4'; }
   if(o==='apron'){ base.skirt=p.cloth2; base.bare=true; }
+  if(o==='hanbok'){ base.skirt=p.cloth2; base.bare=true; base.long=true; base.shoe='#f0e8dc'; }
+  if(o==='bride'){ base.skirt='#ffffff'; base.top='#ffffff'; base.bare=true; base.long=true; base.shoe='#ffffff'; }
   return base;
 }
 
@@ -126,6 +128,17 @@ function torso(c, p, of){
     c.beginPath(); c.moveTo(9.8,-33); c.lineTo(2.8,-33.5); c.lineTo(0,-22); c.lineTo(.6,-15); c.lineTo(9.3,-15); c.closePath(); c.fill();
     torsoPath(c); c.strokeStyle=OL; c.lineWidth=1.6; c.stroke();
     c.fillStyle=lt(of.top,.4); [-20,-17].forEach(y=>{ ell(c,-1.8,y,.8,.8); c.fill(); });
+  } else if(k==='hanbok'){
+    // 저고리: 깃 · 고름 · 소매 끝동
+    c.fillStyle='#ffffff'; c.beginPath(); c.moveTo(-5.4,-34.8); c.lineTo(0,-27.5); c.lineTo(5.4,-34.8); c.lineTo(2.6,-35.2); c.lineTo(0,-30); c.lineTo(-2.6,-35.2); c.closePath(); c.fill(); c.strokeStyle=OL; c.lineWidth=1; c.stroke();
+    c.fillStyle=p.sash||'#d8405a'; c.beginPath(); c.moveTo(1,-28.4); c.quadraticCurveTo(4,-26,2.4,-22); c.quadraticCurveTo(1,-18,2,-14); c.lineTo(-0.6,-14.4); c.quadraticCurveTo(-1.4,-19,0,-23); c.quadraticCurveTo(1.2,-26,-0.6,-27.8); c.closePath(); c.fill();
+    ell(c,1.6,-27.6,2.2,1.6); c.fill();
+    c.fillStyle=lt(of.top,.5); c.fillRect(-10.4,-21.5,3,4); c.fillRect(7.4,-21.5,3,4);
+  } else if(k==='bride'){
+    c.strokeStyle=lt('#ffffff',.2); c.lineWidth=1.1; c.beginPath(); c.arc(0,-35.6,4.8,.1*PI,.9*PI); c.stroke();
+    c.fillStyle='#f2e6ee'; c.fillRect(-9.2,-20.2,18.4,2.4);
+    c.fillStyle='#ffe0ea'; ell(c,4.5,-30,2.2,2.6); c.fill(); ell(c,2.2,-27.8,1.8,2); c.fill();
+    c.fillStyle='#ffffff'; for(let y=-33;y<-21;y+=3) for(let x=-8+(y&2?1:0);x<8;x+=3) c.fillRect(x,y,.8,.8);
   } else if(k==='robe' || k==='tunic'){
     c.fillStyle='#e9c46a'; c.beginPath(); c.moveTo(-8,-34.5); c.lineTo(-4.8,-34.8); c.lineTo(9.2,-17.5); c.lineTo(6.6,-15.8); c.closePath(); c.fill();
     c.strokeStyle=dk('#e9c46a',.35); c.lineWidth=.9; c.stroke();
@@ -300,6 +313,12 @@ function head(c, p, o){
 }
 
 /* ---------- 모자 · 장비 ---------- */
+function veil(c,t){
+  c.beginPath(); c.moveTo(-14,-60); c.quadraticCurveTo(-24,-30,-18,-6+Math.sin(t*.05)); c.quadraticCurveTo(-8,-2,2,-6);
+  c.lineTo(6,-26); c.lineTo(14,-60); c.closePath();
+  c.fillStyle='rgba(255,255,255,.6)'; c.fill(); c.strokeStyle='rgba(220,210,230,.9)'; c.lineWidth=1; c.stroke();
+  for(let k=0;k<7;k++){ const yy=-52+k*7; c.fillStyle='rgba(255,255,255,.85)'; c.fillRect(-18+k, yy, 1.4, 1.4); }
+}
 function hat(c, kind){
   if(kind==='chef'){
     c.beginPath(); c.moveTo(-9,-66); c.lineTo(11,-66); c.lineTo(11,-71); c.lineTo(-9,-71); c.closePath(); fs(c,'#ffffff',1.4);
@@ -318,6 +337,9 @@ function hat(c, kind){
       c.restore();
     }
     ell(c,15.5,-59.5,1.8,1.8); c.fillStyle='#fff3c4'; c.fill();
+  } else if(kind==='tiara'){
+    c.fillStyle='#f6f0ff'; c.beginPath(); c.moveTo(-11,-63); c.lineTo(11,-63); c.lineTo(9,-66); c.lineTo(4,-64); c.lineTo(0,-70); c.lineTo(-4,-64); c.lineTo(-9,-66); c.closePath(); c.fill();
+    c.strokeStyle='#c9a86a'; c.lineWidth=1; c.stroke(); ell(c,0,-68,1.6,1.6); c.fillStyle='#bfe8ff'; c.fill();
   } else if(kind==='halo'){
     c.lineWidth=2.6; c.strokeStyle='rgba(255,226,140,.95)'; c.beginPath(); c.ellipse(1,-78,11,3.2,0,0,PI*2); c.stroke();
     c.lineWidth=1; c.strokeStyle='#fff8dc'; c.stroke();
@@ -388,6 +410,7 @@ function draw(c, x, footY, p, o={}, S=1){
     c.restore(); return;
   }
   if(p.wings) wings(c,t,x);
+  if(p.veil) veil(c,t);
   if(gear.clothes==='aidos_cloak') cape(c,t,sw);
   hairBack(c,P2,t,sw);
   // 뒷팔

@@ -22,6 +22,11 @@ const ITEMS = {
   jeju:   { icon:"🚗", name:"제주 해안도로 사진", desc:"지붕을 활짝 연 오픈카 위로 쏟아지던 햇살.\n매년 서로의 생일마다 반복된, 두 사람만의 작은 의식." },
   halla:  { icon:"⛰️", name:"한라산 정상 사진", desc:"함께 내려다본 구름바다.\n숨이 턱까지 차올라도 손을 놓지 않았던 날." },
   surf:   { icon:"🏄", name:"강원도 파도의 기억", desc:"서투른 몸짓으로 파도를 타던 날들.\n넘어지고 물을 먹으면서도 마주 보며 웃었다." },
+  aeolus_bag: { icon:"🌬️", name:"아이올로스의 바람 주머니", desc:"바람보다 빨리 달린 자에게 주어진 주머니.\n끈이 잘 풀리니 조심할 것." },
+  chaltteok:{ icon:"🍡", name:"태명 '찰떡이'", desc:"엄마 배 속에 찰떡처럼 단단하고 건강하게\n착 달라붙어 있으라는 간절한 사랑을 담은 이름." },
+  hourglass:{ icon:"⏳", name:"기다림의 모래시계", desc:"남은 시간 여덟 달.\n곁에 누군가 있으면 모래가 조금 더 빨리 흐른다." },
+  ultra:  { icon:"🩻", name:"첫 초음파 사진", desc:"꼬물거리는 손발을 처음 본 날의 전율.\n화면 속 작은 별이 손가락을 폈다 쥐었다 했다." },
+  fukuoka:{ icon:"🏮", name:"후쿠오카의 밤바람", desc:"세 식구가 함께 떠난 첫 해외여행.\n야타이 불빛 아래에서 배에 대고 속삭이던 밤." },
   album:  { icon:"📱", name:"휴대폰 사진첩", desc:"어느새 가득 쌓인 두 사람의 사진.\n'우리, 진짜 많이도 웃었다.'" },
   oracle: { icon:"📜", name:"이름의 신탁", desc:"이안 — 기쁘고 평안하라.\n영문으로는 Ian.\n세상에서 유일한 존재가 된 날 받은 이름." }
 };
@@ -78,7 +83,13 @@ const PORTRAITS = {
   grandpa_tribute:{ img:"", emoji:"🕊️", name:"할아버지 전용식 (하늘에서)" },
 
   eros:           { img:"", emoji:"💘", name:"사랑의 신 에로스" },
-  sphinx:         { img:"", emoji:"🦁", name:"스핑크스" }
+  sphinx:         { img:"", emoji:"🦁", name:"스핑크스" },
+  aeolus:         { img:"", emoji:"🌬️", name:"바람의 신 아이올로스" },
+  siren:          { img:"", emoji:"🧜‍♀️", name:"세이렌" },
+  cyclops:        { img:"", emoji:"👁️", name:"외눈의 거인 폴리페모스" },
+  eris:           { img:"", emoji:"🍎", name:"불화의 여신 에리스" },
+  hera:           { img:"", emoji:"👑", name:"결혼의 여신 헤라" },
+  bride:          { img:"images/mom.webp", emoji:"👰", name:"신부 장세은" }
 };
 
 /* 도트 스프라이트 (images/px/*.png — 사진을 보고 한 땀씩 찍은 메이플풍 도트)
@@ -106,7 +117,16 @@ const PALETTES = {
   grandpa:{skin:'#f0c9a6', hair:'#c8c6c4', cloth:'#667a52', cloth2:'#3a3f2a', hairStyle:'short', outfit:'vest', eyes:'smile', old:true},
   tribute:{skin:'#fff5e4', hair:'#ffffff', cloth:'#fff4d8', cloth2:'#ffe9b0', hairStyle:'short', outfit:'robe', eyes:'smile', old:true, glow:true, halo:true},
   muse:   {skin:'#ffe9d8', hair:'#f2c66d', cloth:'#efe6fa', cloth2:'#b8a2dc', hairStyle:'long', outfit:'robe', fem:true, hat:'laurel', eye:'#8a5a2a', glow:true},
-  eros:   {skin:'#ffe6d2', hair:'#f0c060', cloth:'#ffffff', cloth2:'#f6d6e4', hairStyle:'curly', outfit:'tunic', eye:'#4a6ab0', mouth:'open', glow:true, wings:true, float:true}
+  eros:   {skin:'#ffe6d2', hair:'#f0c060', cloth:'#ffffff', cloth2:'#f6d6e4', hairStyle:'curly', outfit:'tunic', eye:'#4a6ab0', mouth:'open', glow:true, wings:true, float:true},
+  aeolus: {skin:'#f4d8c0', hair:'#f4f6fa', cloth:'#9fd4f4', cloth2:'#4a7ab8', hairStyle:'curly', outfit:'robe', eyes:'smile', old:true, mouth:'open', glow:true, float:true},
+  bride:  {skin:'#fad8ba', hair:'#1e1a1e', cloth:'#ffffff', cloth2:'#f0e8f4', hairStyle:'bun', outfit:'bride', fem:true, eye:'#3a2420', hat:'tiara', veil:true, mouth:'open'},
+  hanbok_g:{skin:'#f2cdae', hair:'#d6d4d8', cloth:'#9fd8c8', cloth2:'#e0788a', sash:'#d8405a', hairStyle:'bun', outfit:'hanbok', fem:true, eyes:'smile', old:true},
+  hanbok_m:{skin:'#f2cdae', hair:'#dcdade', cloth:'#f4dff0', cloth2:'#7a6ab8', sash:'#3a5ab8', hairStyle:'bun', outfit:'hanbok', fem:true, eyes:'smile', old:true},
+  eris:   {skin:'#f0d8e4', hair:'#2a1a3a', cloth:'#4a2a5a', cloth2:'#2a1a3a', hairStyle:'long', outfit:'dress', fem:true, eye:'#c84a7a', glow:true, float:true},
+  hera:   {skin:'#fde8d8', hair:'#e8dcc0', cloth:'#f6f0e2', cloth2:'#d8c890', hairStyle:'long', outfit:'robe', fem:true, hat:'laurel', eye:'#8a6a3a', glow:true},
+  moira2: {skin:'#f6e2d0', hair:'#e8e2f0', cloth:'#dcd2f0', cloth2:'#8a7ab0', hairStyle:'long', outfit:'robe', fem:true, eye:'#6a5a8a', glow:true},
+  moira3: {skin:'#f2dcc8', hair:'#c8c4d8', cloth:'#b8aed0', cloth2:'#5a4a78', hairStyle:'bun', outfit:'robe', fem:true, eyes:'smile', old:true, glow:true},
+  siren:  {skin:'#e8f4f0', hair:'#6fe0d0', cloth:'#5ac8e0', cloth2:'#2a8ab0', hairStyle:'long', outfit:'robe', fem:true, eye:'#2a8a9a', glow:true}
 };
 
 /* 여정의 지도 — status: playable | soon */
