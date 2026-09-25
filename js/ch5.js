@@ -22,7 +22,7 @@ const CH5 = {
 
   scenes:{
     lobby:{
-      name:'새벽의 병원 로비', time:'2026년 3월 11일 · 새벽', light:'day', edge:'stone',
+      name:'새벽의 병원 로비', time:'2026년 3월 11일 · 새벽', grade:'rgba(210,235,255,.10)', light:'day', edge:'stone',
       ambient:'rgb(222,232,246)', vignette:.26, fx:['motes'],
       rows:[
         'IWWWWWWWWWWWWWWW',
@@ -41,7 +41,7 @@ const CH5 = {
       objects:[ { id:'noteA', x:14.5, y:8.5, note:true, label:'뮤즈의 쪽지' } ]
     },
     corridor:{
-      name:'초조함의 복도', time:'수술실 앞', light:'night', edge:'stone',
+      name:'초조함의 복도', time:'수술실 앞', grade:'rgba(140,150,230,.16)', light:'night', edge:'stone',
       ambient:'rgb(176,184,222)', vignette:.36, fx:['motes','mist'],
       rows:[
         'IIIIIIIIIIIIIIIIIIIIIIIIIIIIII',
@@ -56,7 +56,7 @@ const CH5 = {
       mobs:[ ['shadow',7.5,2.5],['shadow',11.5,4.5],['shadow',15.5,2.2],['shadow',19.5,4.4],['shadow',23.5,2.6],['shadow',25.5,4.2] ]
     },
     nursery:{
-      name:'신생아실', time:'오전 10시 15분 이후', light:'day', edge:'stone',
+      name:'신생아실', time:'오전 10시 15분 이후', grade:'rgba(255,225,205,.12)', light:'day', edge:'stone',
       ambient:'rgb(252,240,236)', vignette:.2, fx:['petals','beams'],
       rows:[
         'IWWWWWWWWWWWWWW',

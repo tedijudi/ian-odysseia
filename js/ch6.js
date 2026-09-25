@@ -19,7 +19,7 @@ const CH6 = {
 
   scenes:{
     night:{
-      name:'이타카 · 새벽 세 시', time:'어느 새벽 · 3시 12분', light:'night', edge:'stone',
+      name:'이타카 · 새벽 세 시', time:'어느 새벽 · 3시 12분', grade:'rgba(130,150,235,.16)', light:'night', edge:'stone',
       ambient:'rgb(120,132,196)', vignette:.36, fx:['motes'],
       rows:[
         'IWWWWWWIIIIIIIII',
@@ -40,7 +40,7 @@ const CH6 = {
       mobs:[ ['thief',8.5,2.5],['thief',11.5,7.5],['thief',5.5,5.5],['thief',13.5,2.5],['thief',9.5,9.5],['thief',3.5,3.5] ]
     },
     day:{
-      name:'이타카 · 우리 집 거실', time:'다음 날 아침', light:'day', edge:'stone',
+      name:'이타카 · 우리 집 거실', time:'다음 날 아침', grade:'rgba(255,235,200,.10)', light:'day', edge:'stone',
       ambient:'rgb(255,248,238)', vignette:.16, fx:['beams','motes'],
       rows:[
         'IWWWWWWIIIIIIIII',
@@ -64,7 +64,7 @@ const CH6 = {
       ]
     },
     lift:{
-      name:'엘리베이터 거울 앞', time:'외출하는 날', light:'day', edge:'stone',
+      name:'엘리베이터 거울 앞', time:'외출하는 날', grade:'rgba(220,230,245,.08)', light:'day', edge:'stone',
       ambient:'rgb(236,238,246)', vignette:.3, fx:['motes'],
       rows:[
         '::::::::',

@@ -22,7 +22,7 @@ const CH4 = {
 
   scenes:{
     fate:{
-      name:'운명의 물레방', time:'열 달의 시작', light:'night', sky:'stars', edge:'stone',
+      name:'운명의 물레방', time:'열 달의 시작', grade:'rgba(190,180,255,.14)', light:'night', sky:'stars', edge:'stone',
       ambient:'rgb(196,186,236)', vignette:.3, fx:['motes'],
       rows:[
         '$$$$$$$$$$$$$$$$$$',
@@ -43,7 +43,7 @@ const CH4 = {
     },
 
     sand:{
-      name:'기다림의 모래바다', time:'열 달 중 가장 긴 두 달', light:'dusk', sky:'dawn', edge:'sand', water:'#c8a86a',
+      name:'기다림의 모래바다', time:'열 달 중 가장 긴 두 달', grade:'rgba(255,215,170,.12)', light:'dusk', sky:'dawn', edge:'sand', water:'#c8a86a',
       ambient:'rgb(250,224,206)', vignette:.24, fx:['motes'],
       rows:[
         'NNNNNNNNNNNNNNNNNNNNNNNNNN',
@@ -73,7 +73,7 @@ const CH4 = {
     },
 
     echo:{
-      name:'별빛 초음파실', time:'첫 손발을 본 날', light:'night', sky:'stars', edge:'stone',
+      name:'별빛 초음파실', time:'첫 손발을 본 날', grade:'rgba(160,200,255,.14)', light:'night', sky:'stars', edge:'stone',
       ambient:'rgb(186,196,238)', vignette:.3, fx:['motes'],
       rows:[
         '??????????????',
@@ -98,7 +98,7 @@ const CH4 = {
     },
 
     fukuoka:{
-      name:'후쿠오카의 밤바람', time:'세 식구의 첫 해외여행', light:'night', sky:'nightsea', edge:'sea', water:'#1a4a86',
+      name:'후쿠오카의 밤바람', time:'세 식구의 첫 해외여행', grade:'rgba(150,180,255,.14)', light:'night', sky:'nightsea', edge:'sea', water:'#1a4a86',
       ambient:'rgb(152,152,212)', vignette:.3, fx:['motes'],
       rows:[
         '!!!!!!!!!!!!!!!!!!!!!!!!',

@@ -22,7 +22,7 @@ const CH2 = {
   scenes:{
     /* ---------- 1. 바람의 섬 — 제주 해안도로 ---------- */
     jeju:{
-      name:'바람의 섬 · 제주 해안도로', time:'어느 해, 생일', light:'day', sky:'sea', edge:'sea', water:'#23a6d8',
+      name:'바람의 섬 · 제주 해안도로', time:'어느 해, 생일', grade:'rgba(180,240,255,.12)', light:'day', sky:'sea', edge:'sea', water:'#23a6d8',
       ambient:'rgb(255,250,244)', vignette:.14, fx:['wind'],
       rows:[
         'NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN',
@@ -54,7 +54,7 @@ const CH2 = {
 
     /* ---------- 2. 한라의 정상 — 구름바다 위 새벽 ---------- */
     halla:{
-      name:'한라의 정상', time:'새벽 5시 · 해 뜨기 전', light:'dusk', sky:'dawn', edge:'cloud', water:'#5fb8d8', cave:12.5,
+      name:'한라의 정상', time:'새벽 5시 · 해 뜨기 전', grade:'rgba(255,190,220,.12)', light:'dusk', sky:'dawn', edge:'cloud', water:'#5fb8d8', cave:12.5,
       ambient:'rgb(236,210,232)', vignette:.22, fx:['motes'],
       rows:[
         'ZZZZZZZZZZZZZZZZZZZZZZZZZZ',
@@ -89,7 +89,7 @@ const CH2 = {
 
     /* ---------- 3. 파도의 해변 — 강원도 ---------- */
     beach:{
-      name:'파도의 해변 · 강원도', time:'늦은 오후 · 해질녘', light:'dusk', sky:'sunset', edge:'sand', water:'#2386c8',
+      name:'파도의 해변 · 강원도', time:'늦은 오후 · 해질녘', grade:'rgba(255,170,120,.14)', light:'dusk', sky:'sunset', edge:'sand', water:'#2386c8',
       ambient:'rgb(255,214,196)', vignette:.22, fx:['motes'],
       rows:[
         'NNNNNNNNNNNNNNNNNNNNNNNNNNNNNN',
@@ -120,7 +120,7 @@ const CH2 = {
 
     /* ---------- 4. 사진첩의 방 ---------- */
     album:{
-      name:'사진첩의 방', time:'그리고, 지금', light:'day', sky:'stars', edge:'stone',
+      name:'사진첩의 방', time:'그리고, 지금', grade:'rgba(200,190,255,.12)', light:'day', sky:'stars', edge:'stone',
       ambient:'rgb(236,226,246)', vignette:.26, fx:['motes'],
       rows:[
         'FFFFFFFFFFFFFFFF',

@@ -36,7 +36,7 @@ const CH1 = {
   scenes:{
     /* ---------- 1. 사원 식당 — 점심, 창밖엔 벚꽃 ---------- */
     cafeteria:{
-      name:'사원 식당', time:'2018년 4월 13일 · 점심시간', light:'day',
+      name:'사원 식당', time:'2018년 4월 13일 · 점심시간', grade:'rgba(255,240,210,.10)', light:'day',
       ambient:'rgb(246,238,232)', vignette:.18, fx:['petals','beams'],
       rows:[
         'IKKKKKWWWWWWWWWWWW',
@@ -65,7 +65,7 @@ const CH1 = {
 
     /* ---------- 2. 벚꽃 퇴근길 — 같은 날 저녁, 개천 산책로 ---------- */
     street:{
-      name:'벚꽃 퇴근길', time:'같은 날 · 저녁 6시 반', light:'dusk',
+      name:'벚꽃 퇴근길', time:'같은 날 · 저녁 6시 반', grade:'rgba(255,170,210,.12)', light:'dusk',
       ambient:'rgb(214,176,214)', vignette:.26, fx:['petals','mist'],
       rows:[
         'VOOOOOEEEEHHHCCCCCCVVVVVVVVVVV',
@@ -109,7 +109,7 @@ const CH1 = {
 
     /* ---------- 3. 달빛 계단 — 망설임의 고개 ---------- */
     stairs:{
-      name:'달빛 계단 · 망설임의 고개', time:'같은 날 · 저녁 7시', light:'night',
+      name:'달빛 계단 · 망설임의 고개', time:'같은 날 · 저녁 7시', grade:'rgba(150,170,255,.14)', light:'night',
       ambient:'rgb(150,150,214)', vignette:.34, fx:['fireflies','mist','moon'],
       rows:[
         'AAAAAAAAAAAAAAAAAAAA',
@@ -145,7 +145,7 @@ const CH1 = {
 
     /* ---------- 4. 족발집 골목 — 청사초롱 아래 ---------- */
     jokbal:{
-      name:'족발집 골목', time:'같은 날 · 저녁 7시 반', light:'night',
+      name:'족발집 골목', time:'같은 날 · 저녁 7시 반', grade:'rgba(255,180,120,.12)', light:'night',
       ambient:'rgb(190,164,210)', vignette:.3, fx:['petals','lanterns'],
       rows:[
         'VVVVJJJJJJJJVVVVVVVV',
