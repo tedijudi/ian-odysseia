@@ -108,7 +108,9 @@ function setupScene(id){
 }
 
 /* ---------- 배경을 픽셀 하나하나 그리기 ---------- */
+let HAZE=[120,130,170];
 function paintScene(){
+  HAZE = SC.light==='day' ? C('#e6eef8') : SC.light==='dusk' ? C('#e0a8c8') : C('#3a4278');
   bg.width=PW; bg.height=PH;
   const g=bg.getContext('2d'), img=g.createImageData(PW,PH), d=img.data;
   for(let py=0; py<PH; py++) for(let px=0; px<PW; px++){
@@ -118,6 +120,8 @@ function paintScene(){
     if(px>=OX){ const x=a+1, z=(x+1)*8+OY-py; if(x>=1 && x<=MW && z>=0 && z<=BH+4){ const R=RUNB[Math.min(MW-1,Math.floor(x))]; if(R.t!=='N') col=wallPix(R.t, x-R.s, R.e-R.s, z, n, x, 0); } }
     else { const y=1-a, z=(1+y)*8+OY-py; if(y>=1 && y<=MH && z>=0 && z<=BH+4){ const R=RUNL[Math.min(MH-1,Math.floor(y))]; if(R.t!=='N') col=wallPix(R.t, y-R.s, R.e-R.s, z, n, y, 1); } }
     if(!col && wx>=0 && wy>=0 && wx<MW && wy<MH){ const tx=Math.floor(wx), ty=Math.floor(wy), t=cell(tx,ty); if(!WALL.has(t)){ col=floorPix(floorOf(tx,ty),tx,ty,wx-tx,wy-ty,wx,wy,n);
+        const depth=1-Math.min(1,(wx+wy)/((MW+MH)*0.55));
+        if(depth>0) col=mixc(col, HAZE, depth*depth*0.2);
         const fxx=wx-tx, fyy=wy-ty;
         let ao=0;
         if(WALL.has(cell(tx,ty-1)) && fyy<0.45) ao=Math.max(ao,(0.45-fyy)/0.45);
@@ -133,6 +137,83 @@ function paintScene(){
     d[i]=col[0]; d[i+1]=col[1]; d[i+2]=col[2]; d[i+3]=255;
   }
   g.putImageData(img,0,0);
+  skyline(g);
+  decals(g);
+}
+function skyline(g){
+  const K=SC.sky; if(!K || K==='stars') return;
+  const hz=OY-18;
+  g.save(); g.beginPath(); g.rect(0,0,PW,Math.max(0,hz+6)); g.clip();
+  if(K==='sea'||K==='sunset'||K==='nightsea'){
+    // 먼 구름 띠
+    const cc = K==='sunset' ? 'rgba(255,214,190,.55)' : K==='nightsea' ? 'rgba(180,196,255,.3)' : 'rgba(255,255,255,.65)';
+    for(let k=0;k<26;k++){ const x=(k*137+((k*53)%97))%PW, y=hz*0.22+((k*31)%(hz*0.5)), w=40+((k*17)%90), h=5+((k*7)%7);
+      g.fillStyle=cc; g.beginPath(); g.ellipse(x,y,w,h,0,0,6.283); g.fill(); g.beginPath(); g.ellipse(x+w*0.4,y-h*0.6,w*0.5,h*0.8,0,0,6.283); g.fill(); }
+    // 수평선 위의 먼 섬 · 도시
+    const sil = K==='sunset' ? 'rgba(92,52,86,.75)' : K==='nightsea' ? 'rgba(18,26,66,.85)' : 'rgba(126,152,180,.55)';
+    g.fillStyle=sil; g.beginPath(); g.moveTo(0,hz);
+    for(let x=0;x<=PW;x+=14){ const hgt = 6 + Math.sin(x*0.013)*7 + Math.sin(x*0.041+1.7)*4 + ((x*7)%11===0?9:0); g.lineTo(x,hz-Math.max(2,hgt)); }
+    g.lineTo(PW,hz); g.closePath(); g.fill();
+    if(K==='nightsea'){ g.fillStyle='rgba(255,226,150,.85)'; for(let x=12;x<PW;x+=17){ if((x*13)%5) continue; g.fillRect(x,hz-6-((x*3)%7),2,2); } }
+  }
+  if(K==='dawn'){
+    for(let k=0;k<30;k++){ const x=(k*151)%PW, y=hz*0.3+((k*37)%(hz*0.45)), w=50+((k*23)%110), h=7+((k*5)%8);
+      g.fillStyle='rgba(255,236,246,.6)'; g.beginPath(); g.ellipse(x,y,w,h,0,0,6.283); g.fill(); }
+    g.fillStyle='rgba(120,96,158,.55)'; g.beginPath(); g.moveTo(0,hz);
+    for(let x=0;x<=PW;x+=20){ const hgt=10+Math.sin(x*0.009)*16+Math.sin(x*0.03)*7; g.lineTo(x,hz-Math.max(3,hgt)); }
+    g.lineTo(PW,hz); g.closePath(); g.fill();
+  }
+  g.restore();
+}
+function isoDiamond(g, x, y){ const cx=isoX(x+0.5,y+0.5), cy=isoY(x+0.5,y+0.5);
+  g.beginPath(); g.moveTo(cx,cy-8); g.lineTo(cx+16,cy); g.lineTo(cx,cy+8); g.lineTo(cx-16,cy); g.closePath(); return [cx,cy]; }
+function decals(g){
+  g.save(); g.lineCap='round';
+  const night = SC.light!=='day';
+  for(let y=1;y<MH;y++) for(let x=1;x<MW;x++){
+    const t=floorOf(x,y); if(WALL.has(cell(x,y))) continue;
+    const h1=hash(x,y,101), h2=hash(x,y,202), h3=hash(x,y,303);
+    const cx=isoX(x+0.5,y+0.5), cy=isoY(x+0.5,y+0.5);
+    const clip=()=>{ g.save(); isoDiamond(g,x,y); g.clip(); };
+    if(t==='.'||t==='n'||t==='='||t==='x'||t==='s'||t==='o'||t==='e'||t==='q'||t==='m'){
+      if(h1>0.955){ // 맨홀 · 배수구
+        g.fillStyle='rgba(40,38,48,.85)'; g.beginPath(); g.ellipse(cx,cy,7,3.6,0,0,6.283); g.fill();
+        g.strokeStyle='rgba(120,116,130,.8)'; g.lineWidth=1; g.beginPath(); g.ellipse(cx,cy,7,3.6,0,0,6.283); g.stroke();
+        for(let k=-2;k<=2;k++){ g.beginPath(); g.moveTo(cx-5,cy+k*1.4); g.lineTo(cx+5,cy+k*1.4); g.stroke(); } }
+      else if(h1>0.9){ // 금 간 자국
+        clip(); g.strokeStyle='rgba(30,26,40,.35)'; g.lineWidth=1; g.beginPath();
+        let px=cx-12+h2*10, py=cy-4+h3*8; g.moveTo(px,py);
+        for(let k=0;k<4;k++){ px+=5+hash(x,y,k)*5; py+=(hash(y,x,k)-0.5)*5; g.lineTo(px,py); } g.stroke(); g.restore(); }
+      else if(h1>0.93 && night){ // 물웅덩이 (불빛이 비쳐요)
+        clip(); const grd=g.createLinearGradient(cx,cy-5,cx,cy+5); grd.addColorStop(0,'rgba(180,200,255,.22)'); grd.addColorStop(1,'rgba(120,140,220,.1)');
+        g.fillStyle=grd; g.beginPath(); g.ellipse(cx+(h2-0.5)*10,cy+(h3-0.5)*5,9,4.4,0,0,6.283); g.fill();
+        g.fillStyle='rgba(255,240,200,.18)'; g.fillRect(cx-4,cy-1,8,1); g.restore(); }
+      else if(h1>0.72){ clip(); g.fillStyle='rgba(20,16,30,.10)'; g.beginPath(); g.ellipse(cx+(h2-0.5)*14,cy+(h3-0.5)*7,6+h2*5,3+h3*2,0,0,6.283); g.fill(); g.restore(); }
+      if(t==='n' && h2>0.88){ clip(); g.fillStyle='rgba(110,160,110,.35)'; g.beginPath(); g.ellipse(cx+(h3-0.5)*16,cy+(h1-0.5)*8,7,3.4,0,0,6.283); g.fill(); g.restore(); }
+      if((t==='.'||t==='n') && h3>0.9){ // 낙엽 몇 장
+        clip(); for(let k=0;k<3;k++){ const a=hash(x,y,k+7)*6.283, r=hash(y,x,k+7)*12;
+          g.fillStyle=['rgba(214,128,72,.8)','rgba(190,96,60,.8)','rgba(226,168,86,.8)'][k%3];
+          g.beginPath(); g.ellipse(cx+Math.cos(a)*r, cy+Math.sin(a)*r*0.5, 2.4, 1.4, a, 0, 6.283); g.fill(); } g.restore(); }
+    }
+    if(t==='g'||t==='f'){
+      clip();
+      for(let k=0;k<5;k++){ const a=hash(x,y,k)*6.283, r=hash(y,x,k)*13, gx=cx+Math.cos(a)*r, gy=cy+Math.sin(a)*r*0.5;
+        g.strokeStyle= k%2 ? 'rgba(58,132,66,.75)' : 'rgba(150,214,110,.7)'; g.lineWidth=1;
+        g.beginPath(); g.moveTo(gx,gy); g.lineTo(gx+(hash(x,k,y)-0.5)*3, gy-3-hash(k,y,x)*3); g.stroke(); }
+      if(h2>0.86){ g.fillStyle='rgba(120,112,100,.6)'; g.beginPath(); g.ellipse(cx+(h3-0.5)*12,cy+(h1-0.5)*6,3,1.6,0,0,6.283); g.fill(); }
+      g.restore();
+    }
+    if(t==='a'){ clip();
+      g.strokeStyle='rgba(206,176,128,.55)'; g.lineWidth=1;
+      for(let k=0;k<2;k++){ const oy=cy+(hash(x,y,k)-0.5)*8; g.beginPath(); g.moveTo(cx-14,oy); g.quadraticCurveTo(cx,oy+(hash(y,x,k)-0.5)*4,cx+14,oy); g.stroke(); }
+      if(h1>0.9){ g.fillStyle='rgba(255,250,240,.85)'; g.beginPath(); g.ellipse(cx+(h2-0.5)*12,cy+(h3-0.5)*6,2.4,1.6,h2*3,0,6.283); g.fill(); }
+      g.restore(); }
+    if(t==='m' && h1>0.88){ clip(); g.strokeStyle='rgba(180,220,255,.5)'; g.lineWidth=1;
+      g.beginPath(); g.ellipse(cx,cy,9,4.5,0,0,6.283); g.stroke(); g.beginPath(); g.ellipse(cx,cy,5,2.5,0,0,6.283); g.stroke(); g.restore(); }
+    if(t==='e' && h1>0.8){ clip(); g.strokeStyle='rgba(90,60,34,.35)'; g.lineWidth=1;
+      g.beginPath(); g.ellipse(cx+(h2-0.5)*14,cy+(h3-0.5)*7,2.6,1.3,0,0,6.283); g.stroke(); g.restore(); }
+  }
+  g.restore();
 }
 function skyPix(px,py,n){
   const L=SC.light, K=SC.sky, hz=OY-18;
@@ -319,7 +400,10 @@ function wallPix(t, rx, len, z, n, pos, left){
       break; }
     default: c=C('#777788');
   }
-  return left ? adj(c,-10) : c;
+  if(z<7) c=mixc(c, C('#1a1430'), (7-z)/7*0.4);                      // 밑동 그늘
+  else if(z>BH-9 && z<=BH) c=mixc(c, C('#ffffff'), (z-(BH-9))/9*0.16); // 처마 밝은 띠
+  if(z>BH-12 && z<BH-9) c=mixc(c, C('#140f28'), 0.28);                // 처마 밑 그림자
+  return left ? adj(c,-12) : c;
 }
 
 /* ---------- 바닥 ---------- */
