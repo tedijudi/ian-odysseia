@@ -167,6 +167,9 @@ body{ font-family:var(--sans); color:#eef0f6; user-select:none; -webkit-user-sel
 @keyframes qflash{ 0%{ box-shadow:0 0 0 rgba(242,212,138,0);} 30%{ box-shadow:0 0 22px rgba(242,212,138,.75);} 100%{ box-shadow:0 0 0 rgba(242,212,138,0);} }
 #chSelect a.done{ border-color:rgba(120,220,160,.6); color:#bfe8cf; }
 @media (orientation:portrait){ #itemCard{ top:calc(150px + env(safe-area-inset-top,0px)); } }
+
+#d3link{ margin-top:14px; display:inline-block; font-size:12px; text-decoration:none; padding:8px 16px; border-radius:16px;
+  color:#bfe8ff; border:1px solid rgba(120,200,255,.5); background:rgba(26,34,56,.7); }
 </style>
 </head>
 <body>
@@ -192,6 +195,7 @@ body{ font-family:var(--sans); color:#eef0f6; user-select:none; -webkit-user-sel
     <button class="go" id="startBtn">처음부터</button>
     <button class="go sub" id="resumeBtn" style="display:none"></button>
     <div id="chSelect"></div>
+    <a id="d3link" href="iso3d.html">🧪 3D 시험판 — 한라의 정상</a>
   </div>
   <div class="card" id="endCard">
     <small id="endSmall"></small>
