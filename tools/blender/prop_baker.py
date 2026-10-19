@@ -81,17 +81,18 @@ def uv(r, center, m, scale=(1,1,1)):
 
 # ---------- 장면 ----------
 META = {}
+SIN = math.sin(math.radians(ELEV))
+_HINT = [2.0, 2.0]
+
 def scene(wu, hu, margin=1.14):
-    """wu: 가로 폭(units), hu: 높이(units). ortho·해상도·접지점을 규약대로 계산."""
-    ortho = max(wu, hu*COS) * margin
-    px = int(round(ortho * UPU))
-    hoff = hu * 0.5
+    """조명·월드·렌더 설정. 카메라 화각은 render() 가 실제 내용에 맞춰 잡습니다."""
+    global _HINT
+    _HINT = [wu, hu]
     bpy.ops.wm.read_factory_settings(use_empty=True)
     sc = bpy.context.scene
     sc.render.engine = 'CYCLES'; sc.cycles.device = 'CPU'
     sc.cycles.samples = SAMPLES; sc.cycles.use_denoising = True
     sc.cycles.max_bounces = 4
-    sc.render.resolution_x = sc.render.resolution_y = px * SS
     sc.render.film_transparent = True
     sc.render.image_settings.file_format = 'PNG'; sc.render.image_settings.color_mode = 'RGBA'
     sc.view_settings.view_transform = 'Standard'
@@ -111,20 +112,48 @@ def scene(wu, hu, margin=1.14):
     w.node_tree.nodes['Background'].inputs[1].default_value = 0.33
 
     bpy.ops.object.camera_add(); cam = bpy.context.object
-    cam.data.type = 'ORTHO'; cam.data.ortho_scale = ortho; sc.camera = cam
-    el = math.radians(ELEV); d = 60.0
-    cam.location = (0, -d*math.cos(el), d*math.sin(el) + hoff)
-    cam.rotation_euler = (math.radians(90) - el, 0, 0)
-    global _PX, _HOFF
-    _PX, _HOFF = px, hoff
+    cam.data.type = 'ORTHO'; sc.camera = cam
     return sc
 
-_PX, _HOFF = 100, 1.0
-def render(sc, name):
-    px, hoff = _PX, _HOFF
+def _content_bounds():
+    """모든 메시의 월드 꼭짓점을 화면 좌표(가로 x, 세로 z·cos+y·sin)로 바꿔 범위를 구해요."""
+    xs = []; ss = []
+    for o in bpy.context.scene.objects:
+        if o.type != 'MESH': continue
+        mw = o.matrix_world
+        for c in o.bound_box:
+            v = mw @ Vector(c)
+            xs.append(v.x); ss.append(v.z*COS + v.y*SIN)
+    if not xs: return None
+    return min(xs), max(xs), min(ss), max(ss)
+
+def render(sc, name, margin=0.09):
+    """실제 내용에 맞춰 화각을 잡고 렌더 — 나무 꼭대기가 잘리지 않습니다."""
+    bpy.context.view_layer.update()
+    bnd = _content_bounds()
+    if bnd is None:
+        return
+    minx, maxx, mins, maxs = bnd
+    halfW = max(abs(minx), abs(maxx))
+    sc_center = (mins + maxs) * 0.5
+    need = max(halfW*2.0, (maxs - mins), _HINT[0]*0.55) * (1.0 + margin)
+    ortho = need
+    px = int(round(ortho * UPU))
+    px = max(48, min(620, px))
+    ortho = px / UPU                                    # 픽셀에 맞춰 되돌려 규약 유지
+
+    cam = sc.camera
+    cam.data.ortho_scale = ortho
+    cam.data.clip_start = 0.1; cam.data.clip_end = 400.0
+    hoff = sc_center / COS
+    el = math.radians(ELEV); d = 120.0
+    cam.location = (0, -d*math.cos(el), d*math.sin(el) + hoff)
+    cam.rotation_euler = (math.radians(90) - el, 0, 0)
+
+    sc.render.resolution_x = sc.render.resolution_y = px * SS
     sc.render.filepath = f'{OUT}/{name}.png'
     bpy.ops.render.render(write_still=True)
-    foot = round(px/2 - hoff*COS*UPU)
+    foot = round(px/2 - sc_center*UPU)
     META[name] = {'w': px, 'h': px, 'foot': foot}
     print('saved', name, px, 'foot', foot, flush=True)
 
@@ -162,11 +191,11 @@ def pediment(w, d, z, m, m2):
         cube((w*(1-k*0.92), d, 0.115), (0, 0, z + i*0.105), m if i%2 else m2, b=0.010)
 
 def flame(x, y, z, s=1.0):
-    F1 = mat((0.92,0.40,0.10), 0.5, emit=(1.0,0.34,0.06), es=1.1)
-    F2 = mat((1.0,0.68,0.20), 0.5, emit=(1.0,0.56,0.14), es=1.5)
-    ico(0.135*s, (x, y, z+0.08*s), F1, sub=1, scale=(1,1,1.6))
-    ico(0.090*s, (x, y, z+0.17*s), F2, sub=1, scale=(1,1,1.7))
-    ico(0.052*s,(x+0.025*s, y, z+0.27*s), F2, sub=1, scale=(1,1,1.8))
+    F1 = mat((0.86,0.34,0.09), 0.55, emit=(1.0,0.30,0.05), es=0.7)
+    F2 = mat((0.98,0.60,0.16), 0.55, emit=(1.0,0.48,0.10), es=0.95)
+    ico(0.100*s, (x, y, z+0.06*s), F1, sub=2, scale=(1,1,1.7))
+    ico(0.064*s, (x, y, z+0.14*s), F2, sub=2, scale=(1,1,1.8))
+    ico(0.034*s,(x+0.020*s, y, z+0.22*s), F2, sub=2, scale=(1,1,1.9))
 
 # ============================================================
 # 1) 신전

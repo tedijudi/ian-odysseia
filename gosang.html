@@ -44,7 +44,16 @@ canvas#gl{ position:absolute; inset:0; display:block; image-rendering:pixelated;
 #loading{ position:absolute; inset:0; z-index:9; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:10px;
   background:radial-gradient(ellipse at center,rgba(26,22,38,.96),rgba(10,8,16,.99)); font-family:var(--serif); font-size:16px; letter-spacing:3px; }
 #loading small{ font-family:var(--sans); font-size:11px; letter-spacing:1px; color:#9a8f7a; }
-@media (orientation:portrait){ .card{ min-width:150px; } .bar{ width:88px; } }
+@media (orientation:portrait){
+  .card{ min-width:132px; padding:5px 10px 5px 5px; }
+  .card .ava{ width:28px; height:28px; }
+  .bar{ width:76px; height:7px; }
+  .card b{ font-size:11px; }
+  #hint{ bottom:calc(110px + env(safe-area-inset-bottom,0px)); max-width:86vw; text-align:center; }
+  .ctl{ width:66px; height:66px; }
+  .ctl.small{ width:52px; height:52px; }
+}
+@media (max-width:420px){ #hint{ font-size:11px; padding:7px 12px; } }
 </style>
 </head>
 <body>

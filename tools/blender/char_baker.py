@@ -41,6 +41,146 @@ CHARS = {
 }
 ANIMS = {'idle':4, 'walk':8, 'attack':6, 'hurt':3, 'down':4}
 
+# ---------- 이타카 사람들 (서 있기 · 걷기만) ----------
+CHARS.update({
+ 'merchant': dict(scale=1.00, skin=(0.88,0.68,0.52), skin2=(0.77,0.56,0.42),
+   hair=(0.14,0.10,0.08), hair2=(0.26,0.19,0.14),
+   top=(0.74,0.26,0.22), top2=(0.88,0.40,0.32), top3=(0.56,0.17,0.15),
+   bottom=(0.92,0.88,0.80), bottom2=(0.98,0.95,0.88),
+   shoe=(0.38,0.26,0.16), accent=(0.84,0.68,0.26), hairstyle='swept', build='man'),
+ 'fisher': dict(scale=0.98, skin=(0.84,0.62,0.46), skin2=(0.72,0.50,0.36),
+   hair=(0.30,0.28,0.26), hair2=(0.46,0.44,0.42),
+   top=(0.34,0.52,0.60), top2=(0.46,0.64,0.72), top3=(0.24,0.38,0.46),
+   bottom=(0.56,0.50,0.40), bottom2=(0.66,0.60,0.48),
+   shoe=(0.30,0.24,0.18), accent=(0.70,0.62,0.44), hairstyle='swept', build='man'),
+ 'elder': dict(scale=0.96, skin=(0.86,0.70,0.58), skin2=(0.74,0.58,0.47),
+   hair=(0.84,0.82,0.80), hair2=(0.92,0.91,0.89),
+   top=(0.90,0.88,0.84), top2=(0.97,0.96,0.93), top3=(0.76,0.73,0.68),
+   bottom=(0.74,0.70,0.64), bottom2=(0.84,0.80,0.74),
+   shoe=(0.44,0.34,0.24), accent=(0.62,0.50,0.70), hairstyle='swept', build='man'),
+ 'woman': dict(scale=0.95, skin=(0.94,0.76,0.64), skin2=(0.84,0.64,0.52),
+   hair=(0.22,0.14,0.10), hair2=(0.36,0.24,0.16),
+   top=(0.96,0.78,0.42), top2=(1.00,0.88,0.58), top3=(0.82,0.62,0.28),
+   bottom=(0.46,0.34,0.52), bottom2=(0.58,0.44,0.64),
+   shoe=(0.62,0.48,0.32), accent=(0.86,0.42,0.38), hairstyle='ponytail', build='woman'),
+ 'girl': dict(scale=0.80, skin=(0.98,0.84,0.74), skin2=(0.88,0.72,0.62),
+   hair=(0.34,0.20,0.12), hair2=(0.50,0.33,0.20),
+   top=(0.52,0.74,0.60), top2=(0.66,0.86,0.72), top3=(0.38,0.58,0.46),
+   bottom=(0.90,0.86,0.78), bottom2=(0.96,0.93,0.86),
+   shoe=(0.74,0.60,0.42), accent=(0.96,0.72,0.34), hairstyle='ponytail', build='woman'),
+ 'boy': dict(scale=0.82, skin=(0.96,0.80,0.68), skin2=(0.86,0.68,0.56),
+   hair=(0.18,0.12,0.09), hair2=(0.32,0.22,0.15),
+   top=(0.40,0.46,0.72), top2=(0.54,0.60,0.84), top3=(0.28,0.33,0.56),
+   bottom=(0.78,0.72,0.60), bottom2=(0.88,0.83,0.72),
+   shoe=(0.46,0.34,0.22), accent=(0.90,0.56,0.26), hairstyle='swept', build='man'),
+})
+NPC_KEYS = ['merchant', 'fisher', 'elder', 'woman', 'girl', 'boy']
+
+# ---------- 동물 ----------
+ANIMALS = {
+ 'goat':  dict(body=(0.42,0.23,0.25), legh=0.25, headr=0.140, tall=0.80,
+               c=(0.93,0.91,0.87), c2=(0.70,0.67,0.61), horn=(0.56,0.50,0.38),
+               ear=1, tail=0.10, scale=1.12),
+ 'cat':   dict(body=(0.34,0.17,0.16), legh=0.14, headr=0.115, tail=0.30,
+               c=(0.52,0.42,0.32), c2=(0.38,0.30,0.22), horn=None,
+               ear=2, scale=1.14),
+ 'dove':  dict(body=(0.19,0.15,0.16), legh=0.05, headr=0.080, tail=0.11,
+               c=(0.93,0.92,0.90), c2=(0.74,0.74,0.76), horn=None,
+               ear=0, scale=1.22),
+}
+ANIM_SETS = {}
+for _k in NPC_KEYS: ANIM_SETS[_k] = {'idle': 4, 'walk': 8}
+for _k in ANIMALS: ANIM_SETS[_k] = {'idle': 4, 'walk': 8}
+
+
+def build_animal(key):
+    A = ANIMALS[key]
+    C1 = mat('c', A['c'], 0.74); C2 = mat('c2', A['c2'], 0.76)
+    DK = mat('dk', tuple(c*0.55 for c in A['c2']), 0.70)
+    EYE = mat('eye', (0.08,0.06,0.08), 0.24, 0.42)
+    WHT = mat('w', (0.99,0.98,0.96), 0.40)
+    PINK = mat('p', (0.92,0.62,0.60), 0.72)
+    root = bpy.data.objects.new('root', None); bpy.context.collection.objects.link(root)
+    parts = []
+    bw, bd, bh = A['body']; lh = A['legh']; hr = A['headr']
+    bz = lh + bh*0.5
+    body = box('body', (bd, bw, bh), (0, 0, bz), C1, taper=0.94, bev=0.030)
+    rump = ball('rump', bh*0.56, (0, bw*0.34, bz+0.012), C1, (1.0,1.0,0.94)); attach(rump, body)
+    parts.append(body)
+    # 다리 넷
+    legs = {}
+    for i, (sx, sy) in enumerate([(-1,-1),(1,-1),(-1,1),(1,1)]):
+        lx, ly = sx*bd*0.34, sy*bw*0.32
+        lg = box(f'leg{i}', (bd*0.26, bd*0.26, lh), (lx, ly, lh*0.5), C2,
+                 pivot=(lx, ly, lh), taper=0.84, bev=0.016)
+        hf = box(f'hf{i}', (bd*0.30, bd*0.30, lh*0.22), (lx, ly, lh*0.10), DK, bev=0.012)
+        attach(hf, lg); legs[f'l{i}'] = lg; parts.append(lg)
+    # 목과 머리
+    nz = bz + bh*0.62
+    neck = box('neck', (bd*0.46, bd*0.48, bh*0.86), (0, -bw*0.44, nz), C1,
+               pivot=(0, -bw*0.40, bz), lean=-0.07, bev=0.020)
+    attach(neck, body); parts.append(neck)
+    hz = nz + bh*0.56
+    head = ball('head', hr, (0, -bw*0.58, hz), C1, (1.0,1.14,0.98), pivot=(0,-bw*0.40,nz))
+    attach(head, neck); parts.append(head)
+    snout = ball('snout', hr*0.58, (0, -bw*0.58-hr*0.80, hz-hr*0.26), C2, (0.9,1.15,0.8)); attach(snout, head)
+    nose = ball('nose', hr*0.22, (0, -bw*0.58-hr*1.24, hz-hr*0.22), PINK); attach(nose, head)
+    for sx in (-1,1):
+        e = ball(f'eye{sx}', hr*0.28, (sx*hr*0.50, -bw*0.58-hr*0.64, hz+hr*0.16), EYE, (1,0.55,1.1)); attach(e, head)
+        g = ball(f'gl{sx}', hr*0.11, (sx*hr*0.44, -bw*0.58-hr*0.78, hz+hr*0.30), WHT); attach(g, head)
+        if A['ear'] == 1:        # 늘어진 귀
+            er = box(f'ear{sx}', (hr*0.28, hr*0.36, hr*0.62), (sx*hr*0.84, -bw*0.52, hz+hr*0.12), C2,
+                     bev=0.012); attach(er, head)
+        elif A['ear'] == 2:      # 쫑긋 귀
+            er = box(f'ear{sx}', (hr*0.38, hr*0.20, hr*0.70), (sx*hr*0.54, -bw*0.52, hz+hr*0.86), C1,
+                     taper=0.15, bev=0.010); attach(er, head)
+            ei = box(f'ei{sx}', (hr*0.20, hr*0.10, hr*0.38), (sx*hr*0.54, -bw*0.57, hz+hr*0.80), PINK,
+                     taper=0.2, bev=0.006); attach(ei, head)
+    if A.get('horn'):
+        MH = mat('horn', A['horn'], 0.58)
+        for sx in (-1,1):
+            hn = box(f'horn{sx}', (hr*0.22, hr*0.24, hr*1.00), (sx*hr*0.42, -bw*0.46, hz+hr*0.94), MH,
+                     lean=0.055, taper=0.30, bev=0.010); attach(hn, head)
+    # 꼬리
+    tl = A.get('tail', 0.10)
+    tail = box('tail', (bd*0.20, bd*0.20, tl), (0, bw*0.50, bz+bh*0.26), C2,
+               pivot=(0, bw*0.46, bz+bh*0.26), lean=0.03, taper=0.5, bev=0.014)
+    attach(tail, body); parts.append(tail)
+    if key == 'dove':            # 날개
+        for sx in (-1,1):
+            wg = box(f'wing{sx}', (bd*0.16, bw*0.86, bh*0.62), (sx*bd*0.50, 0, bz+0.01), C2,
+                     taper=0.75, bev=0.016); attach(wg, body)
+        beak = box('beak', (hr*0.24, hr*0.50, hr*0.24), (0, -bw*0.58-hr*0.90, hz-hr*0.12),
+                   mat('bk',(0.88,0.66,0.26)), taper=0.2, bev=0.008); attach(beak, head)
+    for o in parts:
+        if o.parent is None: attach(o, root)
+    root.scale = (A['scale'],)*3
+    P = dict(root=root, head=head, torso=body, neck=neck, tail=tail, **legs)
+    return P
+
+
+def pose_animal(P, anim, f, n):
+    root = P['root']; t = f/n*math.tau
+    for k in ('l0','l1','l2','l3'):
+        P[k].rotation_euler = (0,0,0)
+    P['head'].rotation_euler = (0,0,0); P['torso'].rotation_euler = (0,0,0)
+    P['tail'].rotation_euler = (0,0,0); P['neck'].rotation_euler = (0,0,0)
+    root.location = (0,0,0); root.rotation_euler = (0,0,0)
+    if anim == 'walk':
+        sw = math.sin(t)*0.58
+        P['l0'].rotation_euler = (sw,0,0);  P['l3'].rotation_euler = (sw,0,0)
+        P['l1'].rotation_euler = (-sw,0,0); P['l2'].rotation_euler = (-sw,0,0)
+        root.location.z = abs(math.sin(t*2))*0.016
+        P['tail'].rotation_euler = (0,0,math.sin(t*2)*0.30)
+        P['head'].rotation_euler = (math.sin(t*2)*0.07,0,0)
+    else:
+        br = math.sin(t)
+        root.location.z = br*0.010
+        P['head'].rotation_euler = (br*0.09, 0, math.sin(t*0.5)*0.12)
+        P['tail'].rotation_euler = (0,0,br*0.22)
+        P['neck'].rotation_euler = (br*0.05,0,0)
+
+
 # ---------- 도구 ----------
 def mat(name, color, rough=0.76, spec=0.10):
     m = bpy.data.materials.new(name); m.use_nodes = True
@@ -172,7 +312,13 @@ def build(key):
         belt = box('belt',(TW_*1.02,0.268,0.050),(0,0,HPZ+0.05), ACC, bev=0.011); attach(belt, hips)
         buck = box('buck',(0.068,0.040,0.050),(0,-0.138,HPZ+0.05), TOP2, bev=0.009); attach(buck, hips)
 
+    # 옷 주름 — 얕게 파인 선이 덧칠 단계에서 손으로 그은 선이 됩니다
+    for i, (fx, fz, fw) in enumerate([(-0.10, 0.34, 0.012), (0.12, 0.22, 0.010), (-0.04, 0.12, 0.011)]):
+        fold = box(f'fold{i}', (fw, 0.030, (SHZ-HPZ)*0.34),
+                   (fx*TW_, -0.132, HPZ + (SHZ-HPZ)*fz), TOP3,
+                   lean=0.004, bev=0.004); attach(fold, torso)
     neck = cyl('neck', 0.064 if not baby else 0.074, 0.12, (0,0.010,NKZ-0.02), SKIN2); attach(neck, shdr)
+    nsh  = cyl('nsh', 0.082 if not baby else 0.092, 0.035, (0,0.010,NKZ+0.03), SKIN2); attach(nsh, shdr)
 
     # 머리 — 크고 동글게
     head = ball('head', HEADR, (0,0,HEADZ), SKIN, HEADS, pivot=(0,0,NKZ))
@@ -197,6 +343,9 @@ def build(key):
     for o, sx in ((fore_l,-1), (fore_r,1)):
         h = box(f'hand{sx}',(0.104,0.124,0.105),(sx*AX,-0.006,WZ-0.048), SKIN, bev=0.030, round_top=0.12); attach(h, o)
         t = box(f'thb{sx}',(0.034,0.046,0.058),(sx*(AX-0.056),-0.028,WZ-0.030), SKIN, bev=0.015); attach(t, o)
+        for fi in (-1, 1):                                  # 손가락 마디
+            fg = box(f'fg{sx}{fi}',(0.030,0.044,0.050),
+                     (sx*AX + fi*0.026, -0.012, WZ-0.112), SKIN, bev=0.013); attach(fg, o)
 
     # 다리
     legM = BOT if (not fem and not baby) else SKIN
@@ -256,6 +405,17 @@ def build(key):
         hair_objs.append(ball('curl2',0.034,(0.044,0.024,HT+0.094), HAIR2))
         for sx in (-1,1):
             hair_objs.append(box(f'sb{sx}',(0.042,HEADR*0.50,HEADR*0.40),(sx*HEADR*0.96,-0.006,HEADZ-0.030), HAIR, bev=0.012))
+    # 가닥 몇 개를 삐죽 내어 실루엣을 깨요 (덩어리로 안 보이게)
+    import random as _r
+    _r.seed({'man': 3, 'woman': 7, 'baby': 11}[b])
+    for i in range(5):
+        ang = _r.uniform(0, 6.283)
+        rr = HEADR * _r.uniform(0.45, 0.92)
+        zz = HEADZ + HEADR * _r.uniform(0.30, 0.74)
+        hair_objs.append(box(f'wisp{i}',
+            (0.034, 0.040, HEADR*_r.uniform(0.26, 0.46)),
+            (math.cos(ang)*rr, math.sin(ang)*rr*0.85, zz), HAIR2,
+            lean=_r.uniform(-0.03, 0.03), taper=0.55, bev=0.010))
     for o in hair_objs: attach(o, head)
     parts += hair_objs
 
@@ -266,14 +426,14 @@ def build(key):
     eyeY = -hy + 0.012
     face = []
     for sx in (-1,1):
-        face.append(ball(f'ew{sx}', eyeR, (sx*eyeX, eyeY+0.020, eyeZ), WHITE, (1.0,0.30,1.14)))
-        face.append(ball(f'ei{sx}', eyeR*0.80, (sx*eyeX, eyeY+0.008, eyeZ-0.004), IRIS, (1.0,0.26,1.08)))
-        face.append(ball(f'ep{sx}', eyeR*0.50, (sx*eyeX, eyeY+0.000, eyeZ-0.008), EYE, (1.0,0.24,1.06)))
-        face.append(ball(f'eg{sx}', eyeR*0.26, (sx*eyeX-eyeR*0.34, eyeY-0.010, eyeZ+eyeR*0.42), WHITE))
-        face.append(ball(f'eg2{sx}', eyeR*0.14, (sx*eyeX+eyeR*0.30, eyeY-0.008, eyeZ-eyeR*0.40), WHITE))
-        face.append(box(f'lid{sx}', (eyeR*2.00, 0.028, eyeR*0.24), (sx*eyeX, eyeY+0.016, eyeZ+eyeR*1.06), HAIR2, lean=-0.006, bev=0.005))
-        face.append(box(f'br{sx}', (eyeR*1.55, 0.024, 0.017), (sx*eyeX, eyeY+0.034, eyeZ+eyeR*1.95), HAIR2, lean=-0.004, bev=0.004))
-        face.append(ball(f'bl{sx}', eyeR*0.76, (sx*HEADR*0.70, eyeY+0.040, eyeZ-eyeR*0.80), BLUSH, (1.26,0.20,0.54)))
+        # 흰자 테두리를 없앴어요 — 작게 줄이면 고글처럼 보이거든요.
+        # 짙은 눈 + 반짝이 하나 + 아래쪽 홍채빛. 이게 거상·도트 게임의 귀여운 눈입니다.
+        face.append(ball(f'ep{sx}', eyeR, (sx*eyeX, eyeY+0.012, eyeZ), EYE, (1.0,0.26,1.06)))
+        face.append(ball(f'ei{sx}', eyeR*0.52, (sx*eyeX, eyeY-0.004, eyeZ-eyeR*0.34), IRIS, (1.0,0.22,0.64)))
+        face.append(ball(f'eg{sx}', eyeR*0.34, (sx*eyeX-eyeR*0.30, eyeY-0.014, eyeZ+eyeR*0.40), WHITE))
+        face.append(ball(f'eg2{sx}', eyeR*0.16, (sx*eyeX+eyeR*0.34, eyeY-0.010, eyeZ-eyeR*0.46), WHITE))
+        face.append(box(f'br{sx}', (eyeR*1.55, 0.024, 0.018), (sx*eyeX, eyeY+0.034, eyeZ+eyeR*2.05), HAIR2, lean=-0.004, bev=0.004))
+        face.append(ball(f'bl{sx}', eyeR*0.60, (sx*HEADR*0.88, eyeY+0.052, eyeZ-eyeR*1.40), BLUSH, (1.22,0.18,0.48)))
     face.append(ball('nose', eyeR*0.24, (0, eyeY-0.006, eyeZ-eyeR*0.78), SKIN2, (1.0,0.9,0.8)))
     face.append(box('mouth', (eyeR*0.72, 0.024, 0.016), (0, eyeY+0.014, eyeZ-eyeR*1.28), MOUTH, bev=0.005))
     for o in face: attach(o, head)
@@ -396,17 +556,21 @@ if ONLY:
     p = ONLY.split(':'); only = (p[0], p[1], int(p[2]), int(p[3]))
 
 meta = {'_foot': FOOT, '_w': PW, '_h': PH}
-for key in CHARS:
+ALL = list(CHARS.keys()) + list(ANIMALS.keys())
+for key in ALL:
     if only and key != only[0]: continue
-    sc = setup_scene(); P = build(key)
-    meta[key] = dict(ANIMS)
-    for anim, n in ANIMS.items():
+    sc = setup_scene()
+    animal = key in ANIMALS
+    P = build_animal(key) if animal else build(key)
+    anims = ANIM_SETS.get(key, ANIMS)
+    meta[key] = dict(anims)
+    for anim, n in anims.items():
         if only and anim != only[1]: continue
         for d in range(DIRS):
             if only and d != only[2]: continue
             for f in range(n):
                 if only and f != only[3]: continue
-                pose(P, anim, f, n)
+                (pose_animal if animal else pose)(P, anim, f, n)
                 P['root'].rotation_euler.z = math.radians(d * (360 / DIRS))
                 bpy.context.view_layer.update()
                 sc.render.filepath = f'{OUT}/{key}_{anim}_d{d}_f{f:02d}.png'

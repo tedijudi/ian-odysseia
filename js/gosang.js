@@ -37,8 +37,11 @@ function imgLoad(src, store, key, info) {
 const TW = 64, TH = 32;
 const MAP = { w: 60, h: 60, blocked: [], props: [], scatter: [] };
 
-/* 지면 종류: 0 흙길 · 1 풀 · 2 마른풀(여름 들판) · 3 석회암 · 4 올리브 덤불 · 5 포석(마을 광장) */
+/* 지면 종류: 0 흙길 · 1 풀 · 2 마른풀 · 3 석회암 · 4 올리브 덤불 · 5 포석 · 6 바다 · 7 모래 */
 function groundAt(x, y) {
+  const sea = seaMask(x, y);
+  if (sea > 0.5) return 6;
+  if (sea > 0.0) return 7;
   if (plazaMask(x, y)) return 5;
   const road = roadMask(x, y);
   if (road > 0.5) return 0;
@@ -48,6 +51,20 @@ function groundAt(x, y) {
   if (n > 0.71) return 4;
   if (m > 0.74) return 3;
   return 1;
+}
+/* 바다: 섬의 북서쪽이 에게해. 1 이면 물, 0~1 사이는 모래사장 */
+function seaMask(x, y) {
+  const shore = 11 + Math.sin(y * 0.21) * 2.6 + Math.sin(y * 0.077) * 3.4
+                   + fbm(x * 0.06, y * 0.06, 91) * 4.0;
+  const d = shore - x;                       // 양수면 바다 쪽
+  if (d > 2.6) return 1;
+  if (d > -1.4) return (d + 1.4) / 4.0;
+  return 0;
+}
+/* 바다 깊이 — 멀수록 짙어요 */
+function seaDepth(x, y) {
+  const shore = 11 + Math.sin(y * 0.21) * 2.6 + Math.sin(y * 0.077) * 3.4;
+  return Math.max(0, Math.min(1, (shore - x) / 13));
 }
 /* 광장: 신전 앞 포석 마당 */
 function plazaMask(x, y) {
@@ -77,14 +94,17 @@ function genMap() {
       if (MAP.blocked[y + j] !== undefined && MAP.blocked[y + j][x + i] !== undefined) MAP.blocked[y + j][x + i] = 1;
   };
   // 여러 칸을 차지하는 건물은 발자국 한가운데를 기준점으로 삼아야 앞뒤가 맞아요
-  const put = (kind, x, y, bw = 1, bh = 1) => {
-    MAP.props.push({ kind, x: x + (bw - 1) / 2, y: y + (bh - 1) / 2 });
+  const put = (kind, x, y, bw = 1, bh = 1, extra) => {
+    MAP.props.push(Object.assign({ kind, x: x + (bw - 1) / 2, y: y + (bh - 1) / 2 }, extra));
     block(x, y, bw, bh);
   };
+  // 바다는 걸어 들어갈 수 없어요
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++)
+    if (seaMask(x, y) > 0.35) MAP.blocked[y][x] = 1;
 
   // 이타카 — 언덕 위 신전, 그 앞 포석 광장, 둘레에 흰 집과 아고라
   put('temple', 27, 20, 5, 4);
-  [[15, 26], [42, 26], [14, 40], [43, 40], [23, 47], [36, 47]].forEach(([x, y], i) => {
+  [[20, 25], [42, 26], [19, 41], [43, 40], [24, 48], [36, 47]].forEach(([x, y], i) => {
     put(i % 2 === 0 ? 'house' : 'villa', x, y, 3, 3);
   });
   put('stoa', 34, 35, 3, 2);
@@ -96,9 +116,14 @@ function genMap() {
   [[27, 16], [32, 16], [15, 32], [45, 32]].forEach(([x, y]) => put('herm', x, y));
   [[31, 39], [28, 39], [37, 37], [22, 37]].forEach(([x, y]) => put('amphora', x, y));
   // 바닷가 쪽 폐허와 흩어진 기둥 — 오디세이아의 옛 영광
-  put('ruin', 11, 18, 2, 2);
   put('ruin', 47, 46, 2, 2);
-  [[10, 23], [16, 15], [45, 44], [50, 49], [11, 47], [49, 20]].forEach(([x, y]) => put('column', x, y));
+  put('ruin', 20, 12, 2, 2);
+  [[16, 15], [45, 44], [50, 49], [23, 52], [49, 20], [19, 46]].forEach(([x, y]) => put('column', x, y));
+  // 신화 — 하늘에 떠 있는 부서진 신전, 땅에 반쯤 묻힌 거신상
+  put('temple', 24, 8, 5, 4, { float: 96, bob: 1 });
+  put('statue', 44, 15, 1, 1, { big: 2.4, tilt: 1 });
+  put('column', 41, 12, 1, 1, { big: 1.8 });
+  put('column', 47, 18, 1, 1, { big: 1.5, tilt: 1 });
 
   // 초목: 길과 건물을 피해 빽빽하게
   const free = (x, y, r = 1) => {
@@ -107,7 +132,7 @@ function genMap() {
       if (nx < 0 || ny < 0 || nx >= w || ny >= h) return false;
       if (MAP.blocked[ny][nx]) return false;
     }
-    return roadMask(x, y) < 0.25 && !plazaMask(x, y);
+    return roadMask(x, y) < 0.25 && !plazaMask(x, y) && seaMask(x, y) <= 0;
   };
   for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) {
     const dens = fbm(x * 0.12, y * 0.12, 21);
@@ -225,6 +250,123 @@ function stepActor(a, dt) {
   if (a.stepT < 0) a.stepT = 0;
 }
 
+
+/* ================= 이타카 사람들과 동물 ================= */
+const TALK = {
+  merchant: ['올리브기름 한 병 어떠시오. 이타카에서 제일 좋은 것이오.',
+             '바다 건너 소식 말이오? …요즘은 배가 잘 안 들어옵니다.',
+             '값은 깎아드리지. 아이가 참 곱구먼.'],
+  fisher:   ['오늘은 바다가 잠잠해. 그물을 던지기 좋은 날이지.',
+             '서쪽 물길은 조심하시오. 거기엔… 뭔가 있소.',
+             '이십 년 전에도 저 신전은 저렇게 떠 있었소.'],
+  elder:    ['그 사람은 돌아올 걸세. 반드시.',
+             '신들은 기다리는 자를 미워하지 않아.',
+             '광장 바닥의 문양 말인가. 아무도 누가 새겼는지 모른다네.'],
+  woman:    ['우물물이 요새 차가워졌어요. 가을이 오려나 봐요.',
+             '아이들이 또 올리브밭으로 갔네. 해 지기 전엔 와야 할 텐데.',
+             '제단의 불은 꺼뜨리면 안 돼요. 절대로.'],
+  girl:     ['저기 떠 있는 거 봤어요? 밤엔 더 잘 보여요!',
+             '염소가 또 도망갔어요. 같이 찾아줄래요?',
+             '엄마가 바닷가엔 가지 말래요.'],
+  boy:      ['나는 커서 배를 탈 거예요. 아주 먼 데까지!',
+             '저 석상, 밤에 눈이 빛나는 거 봤어요. 진짜로요.',
+             '달리기 시합할래요?'],
+  goat:     ['메에—'],
+  cat:      ['갸릉…'],
+  dove:     ['구구.'],
+};
+const NPC_SPAWN = [
+  ['merchant', 35, 33, 2.0], ['merchant', 23, 33, 1.9],
+  ['fisher',   18, 28, 2.1], ['fisher',   19, 43, 2.0],
+  ['elder',    30, 29, 1.5], ['woman',    30, 40, 1.8],
+  ['girl',     27, 33, 2.6], ['boy',      33, 31, 2.7],
+  ['goat',     22, 45, 1.6], ['goat',     24, 47, 1.5], ['goat', 21, 46, 1.7],
+  ['cat',      31, 35, 2.2], ['cat',      26, 27, 2.0],
+  ['dove',     29, 26, 2.4], ['dove',     32, 25, 2.3], ['dove', 27, 26, 2.5],
+];
+/* 막힌 칸에 생기면 가까운 빈 칸을 찾아 옮겨요 */
+function freeSpot(x, y) {
+  if (walkable(x, y)) return [x, y];
+  for (let r = 1; r <= 6; r++)
+    for (let j = -r; j <= r; j++) for (let i = -r; i <= r; i++)
+      if (Math.max(Math.abs(i), Math.abs(j)) === r && walkable(x + i, y + j)) return [x + i, y + j];
+  return [x, y];
+}
+const npcs = [];
+for (const [kind, sx0, sy0, sp] of NPC_SPAWN) {
+  const [x, y] = freeSpot(sx0, sy0);
+  const a = Actor(kind, x, y, { speed: sp });
+  a.home = [x, y];
+  a.wait = Math.random() * 4;
+  a.anim = 'idle';
+  a.lineIdx = 0;
+  npcs.push(a);
+}
+function stepNpc(a, dt) {
+  a.t += dt;
+  if (a.talk > 0) { a.talk -= dt; a.anim = 'idle'; a.path = null; }
+  else if (a.path && a.path.length) {
+    const [tx, ty] = a.path[0], dx = tx - a.x, dy = ty - a.y, d = Math.hypot(dx, dy);
+    if (d < 0.12) { a.x = tx; a.y = ty; a.path.shift(); }
+    else { const sp = Math.min(a.speed * dt, d); a.x += dx / d * sp; a.y += dy / d * sp; a.dir = dirFrom(dx, dy); }
+    a.anim = 'walk';
+  } else {
+    a.anim = 'idle';
+    a.wait -= dt;
+    if (a.wait <= 0) {
+      a.wait = 2 + Math.random() * 6;
+      const r = a.key === 'dove' ? 3 : a.key === 'cat' ? 5 : 4;
+      const tx = Math.round(a.home[0] + (Math.random() * 2 - 1) * r);
+      const ty = Math.round(a.home[1] + (Math.random() * 2 - 1) * r);
+      const path = findPath(Math.round(a.x), Math.round(a.y), tx, ty);
+      if (path && path.length && path.length < 14) a.path = path;
+    }
+  }
+  const info = SPR[a.key];
+  if (info && info.anims) {
+    const an = info.anims[a.anim] || info.anims.idle;
+    const fps = a.anim === 'walk' ? (a.key === 'dove' ? 14 : 10) : 5;
+    a.frame = Math.floor(a.t * fps) % an.frames;
+  }
+}
+/* 말 걸기 */
+let speech = null;
+function tryTalk() {
+  let best = null, bd = 3.2;
+  for (const a of npcs) {
+    const d = Math.hypot(a.x - player.x, a.y - player.y);
+    if (d < bd) { bd = d; best = a; }
+  }
+  const hint = $('hint');
+  if (!best) { if (hint) hint.textContent = '말을 걸 사람이 가까이 없어요'; return; }
+  const lines = TALK[best.key] || ['…'];
+  const line = lines[best.lineIdx % lines.length];
+  best.lineIdx++;
+  best.talk = 3.0;
+  best.dir = dirFrom(player.x - best.x, player.y - best.y);
+  speech = { a: best, t: 0, line };
+  if (hint) hint.textContent = line;
+}
+function drawSpeech() {
+  if (!speech) return;
+  speech.t += lastDt;
+  if (speech.t > 3.0) { speech = null; return; }
+  const a = speech.a;
+  const px = isoX(a.x, a.y) - camX, py = isoY(a.x, a.y) - camY - 96;
+  ctx.font = '600 11px "Noto Sans KR", sans-serif'; ctx.textAlign = 'center';
+  const w = Math.min(230, ctx.measureText(speech.line).width + 18);
+  const fade = Math.min(1, (3.0 - speech.t) * 2);
+  ctx.globalAlpha = fade;
+  ctx.fillStyle = 'rgba(28,22,18,.86)';
+  ctx.beginPath(); ctx.roundRect(px - w / 2, py - 15, w, 24, 6); ctx.fill();
+  ctx.strokeStyle = 'rgba(214,176,112,.6)'; ctx.lineWidth = 1; ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(px - 5, py + 9); ctx.lineTo(px, py + 15); ctx.lineTo(px + 5, py + 9);
+  ctx.fillStyle = 'rgba(28,22,18,.86)'; ctx.fill();
+  ctx.fillStyle = '#f6edd6';
+  ctx.fillText(speech.line, px, py + 2);
+  ctx.globalAlpha = 1;
+}
+
 /* ---------------- 화면 ---------------- */
 const cv = $('gl'), ctx = cv.getContext('2d');
 let SW = 0, SH = 0, DPR = 1, camX = 0, camY = 0, zoom = 1;
@@ -241,12 +383,14 @@ addEventListener('resize', resize); resize();
 
 /* 지면 색 — 거상처럼 탁한 자연색 */
 const GC = [
-  ['#cbb087', '#c2a67e', '#d8bf98'],   // 0 흙길 — 볕에 마른 흙
-  ['#8aa65a', '#809c52', '#98b368'],   // 1 풀
-  ['#c3b56a', '#b8aa61', '#cfc078'],   // 2 여름 마른 들판
-  ['#c9c3b1', '#bfb9a7', '#d4cebd'],   // 3 석회암
-  ['#6b8a4c', '#628045', '#779756'],   // 4 올리브 덤불
-  ['#ded7c7', '#d3ccbc', '#e8e2d4'],   // 5 광장 포석
+  ['#c0a070', '#b39566', '#cdae7e'],   // 0 흙길 — 볕에 마른 흙
+  ['#6e9440', '#648a39', '#7ca24e'],   // 1 풀
+  ['#bdaa52', '#b09d49', '#c8b65f'],   // 2 여름 마른 들판
+  ['#bcb59f', '#b0a994', '#c7c0ab'],   // 3 석회암
+  ['#4d7437', '#456b31', '#587f41'],   // 4 올리브 덤불
+  ['#d6cdb8', '#c9c0ac', '#e1d9c6'],   // 5 광장 포석
+  ['#1c5f82', '#17506f', '#246f94'],   // 6 바다
+  ['#ded0a6', '#d2c398', '#e9dcb6'],   // 7 모래사장
 ];
 
 /* 지면을 오프스크린에 한 번만 그려두고 재사용 */
@@ -276,6 +420,10 @@ function paintGround() {
     const shade = fbm(x * 0.33, y * 0.33, 9);
     g.fillStyle = pal[(shade * 3) | 0];
     g.beginPath(); g.moveTo(px, py - hh); g.lineTo(px + half, py); g.lineTo(px, py + hh); g.lineTo(px - half, py); g.closePath(); g.fill();
+    if (t === 6) {                       // 깊이에 따라 짙어지는 바다 (흐림에 섞여 경계가 안 보여요)
+      g.fillStyle = `rgba(6,30,56,${0.08 + seaDepth(x, y) * 0.50})`;
+      g.beginPath(); g.moveTo(px, py - hh); g.lineTo(px + half, py); g.lineTo(px, py + hh); g.lineTo(px - half, py); g.closePath(); g.fill();
+    }
     for (const [dx, dy] of [[1,0],[0,1],[-1,0],[0,-1]]) {
       const nt = groundAt(x + dx, y + dy);
       if (nt === t) continue;
@@ -310,6 +458,36 @@ function paintGround() {
     rg.addColorStop(0, warm ? `rgba(255,246,206,${0.12 + k * 0.15})` : `rgba(58,62,70,${0.06 + k * 0.09})`);
     rg.addColorStop(1, 'rgba(0,0,0,0)');
     g.fillStyle = rg; g.fillRect(px - 150, py - 80, 300, 160);
+  }
+
+  // 3.5차 — 먼 바다: 안개와 섬 그림자
+  if (x0 < 14) {
+    const ISLANDS = [[-9, 20, 150, 46], [-14, 36, 190, 58], [-6, 50, 120, 38], [-18, 8, 130, 40]];
+    for (const [ix, iy, iw, ih] of ISLANDS) {
+      const px = isoX(ix, iy) - gOffX, py = isoY(ix, iy) - gOffY;
+      if (px < -500 || px > vw + 500 || py < -300 || py > vh + 300) continue;
+      g.save();
+      g.fillStyle = 'rgba(86,112,132,.52)';
+      g.beginPath();
+      g.moveTo(px - iw, py + ih * 0.30);
+      g.quadraticCurveTo(px - iw * 0.45, py - ih * 0.85, px, py - ih * 0.55);
+      g.quadraticCurveTo(px + iw * 0.50, py - ih * 1.05, px + iw, py + ih * 0.30);
+      g.closePath(); g.fill();
+      g.fillStyle = 'rgba(132,158,176,.34)';
+      g.beginPath();
+      g.ellipse(px, py + ih * 0.30, iw, ih * 0.34, 0, 0, Math.PI, true);
+      g.fill();
+      g.restore();
+    }
+    // 수평선 안개
+    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+      const dp = seaDepth(x, y);
+      if (dp < 0.60) continue;
+      const px = isoX(x, y) - gOffX, py = isoY(x, y) - gOffY;
+      g.fillStyle = `rgba(178,202,218,${(dp - 0.60) * 0.95})`;
+      g.beginPath(); g.moveTo(px, py - TH / 2 - 1); g.lineTo(px + TW / 2 + 1, py);
+      g.lineTo(px, py + TH / 2 + 1); g.lineTo(px - TW / 2 - 1, py); g.closePath(); g.fill();
+    }
   }
 
   // 4차 — 풀잎·자갈·꽃 같은 손맛 디테일
@@ -352,6 +530,25 @@ function groundDetail(g, t, px, py, x, y) {
       g.strokeStyle = k % 2 ? 'rgba(196,176,92,.52)' : 'rgba(232,218,146,.46)';
       g.lineWidth = 1; g.beginPath(); g.moveTo(gx, gy); g.lineTo(gx + 1, gy - 4); g.stroke();
     }
+  } else if (t === 6) {                           // 바다 — 깊이에 따라 짙어지고 윤슬이 반짝
+    const dp = seaDepth(x, y);
+    for (let k = 0; k < 3; k++) {
+      const a = hash2(x, y, k + 40), b2 = hash2(y, x, k + 40);
+      g.strokeStyle = `rgba(190,232,245,${0.14 + (1 - dp) * 0.20})`;
+      g.lineWidth = 1;
+      const wx = px + (a - .5) * 46, wy = py + (b2 - .5) * 20;
+      g.beginPath(); g.moveTo(wx - 5, wy); g.quadraticCurveTo(wx, wy - 2, wx + 5, wy); g.stroke();
+    }
+  } else if (t === 7) {                           // 모래사장 — 포말과 조개
+    for (let k = 0; k < 5; k++) {
+      const a = hash2(x, y, k + 60) * 6.283, r = hash2(y, x, k + 60) * 24;
+      g.fillStyle = hash2(x, k, y) > .6 ? 'rgba(248,240,214,.52)' : 'rgba(196,178,132,.42)';
+      g.beginPath(); g.ellipse(px + Math.cos(a) * r, py + Math.sin(a) * r * 0.5, 2.3, 1.2, 0, 0, 7); g.fill();
+    }
+    if (seaMask(x + 1, y) > 0.5 || seaMask(x, y + 1) > 0.5) {   // 파도 거품
+      g.strokeStyle = 'rgba(255,255,255,.62)'; g.lineWidth = 2;
+      g.beginPath(); g.moveTo(px - TW / 2, py); g.quadraticCurveTo(px, py + TH / 2 - 2, px + TW / 2, py); g.stroke();
+    }
   } else if (t === 5) {                           // 광장 — 대리석 포석 (여기만 격자가 어울려요)
     const hw = TW / 2 - 3, hh = TH / 2 - 1.5;
     g.strokeStyle = 'rgba(176,166,146,.55)'; g.lineWidth = 1;
@@ -367,16 +564,20 @@ function groundDetail(g, t, px, py, x, y) {
   }
 }
 
-function shadow(px, py, r, a = 0.26) {
-  ctx.save();
-  ctx.translate(px, py); ctx.scale(1, 0.45);
-  const rg = ctx.createRadialGradient(0, 0, r * 0.18, 0, 0, r);
-  rg.addColorStop(0, `rgba(26,20,34,${a})`);
-  rg.addColorStop(0.62, `rgba(26,20,34,${a * 0.68})`);
+const SHADOW_IMG = (() => {
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const g = c.getContext('2d');
+  const rg = g.createRadialGradient(64, 64, 11, 64, 64, 64);
+  rg.addColorStop(0, 'rgba(26,20,34,1)');
+  rg.addColorStop(0.62, 'rgba(26,20,34,.68)');
   rg.addColorStop(1, 'rgba(26,20,34,0)');
-  ctx.fillStyle = rg;
-  ctx.beginPath(); ctx.arc(0, 0, r, 0, 7); ctx.fill();
-  ctx.restore();
+  g.fillStyle = rg; g.fillRect(0, 0, 128, 128);
+  return c;
+})();
+function shadow(px, py, r, a = 0.26) {
+  ctx.globalAlpha = a;
+  ctx.drawImage(SHADOW_IMG, px - r, py - r * 0.45, r * 2, r * 0.9);
+  ctx.globalAlpha = 1;
 }
 function drawActor(a) {
   const info = SPR[a.key]; if (!info || !info.img.complete || !info.img.naturalWidth) return;
@@ -397,6 +598,8 @@ function drawActor(a) {
   }
 }
 const BIG = { temple: 1, house: 1, villa: 1, stoa: 1, ruin: 1 };
+/* 풀포기는 그림자를 그리지 않아요 — 수백 개라 그게 제일 비쌉니다 */
+const NOSHADOW = { grass_green: 1, grass_dry: 1, wheat: 1 };
 /* 그림자 반지름 — 그림 폭이 아니라 실제 바닥 발자국에 맞춰요 */
 const SHR = {
   temple: 128, house: 78, villa: 78, stoa: 74, ruin: 48,
@@ -406,19 +609,34 @@ const SHR = {
 function drawProp(p, small) {
   const d = PROP[p.kind]; if (!d || !d.img.complete || !d.img.naturalWidth) return;
   const px = isoX(p.x, p.y) - camX, py = isoY(p.x, p.y) - camY;
-  if (px < -340 || px > SW / zoom + 340 || py < -440 || py > SH / zoom + 340) return;
-  shadow(px, py, SHR[p.kind] || d.w * (small ? 0.16 : 0.2), small ? 0.17 : 0.22);
+  const sc = p.big || 1;
+  const hw = d.w * 0.5 * sc + 8, up = (d.h - d.foot) * sc + 8, dn = d.foot * sc + 8;
+  if (px < -hw || px > SW / zoom + hw || py < -up || py > SH / zoom + dn) return;
+  const lift = p.float ? p.float + Math.sin(worldT * 0.5 + p.x) * 7 : 0;
+  if (!NOSHADOW[p.kind])
+    shadow(px, py, (SHR[p.kind] || d.w * (small ? 0.16 : 0.2)) * sc,
+           (small ? 0.17 : 0.22) * (p.float ? 0.45 : 1));
   // 큰 건물 뒤에 가족이 들어가면 살짝 비쳐 보이게 (거상처럼)
   let al = 1;
   if (BIG[p.kind]) {
     for (const a of actors) {
       if (a.x + a.y <= p.x + p.y) continue;
       const ax = isoX(a.x, a.y) - camX, ay = isoY(a.x, a.y) - camY;
-      if (Math.abs(ax - px) < d.w * 0.5 && ay - py > -d.h + d.foot && ay - py < d.foot + 10) { al = 0.42; break; }
+      if (Math.abs(ax - px) < d.w * 0.34 && ay - py > -d.h * 0.86 && ay - py < -6) { al = 0.46; break; }
     }
   }
   if (al < 1) ctx.globalAlpha = al;
-  ctx.drawImage(d.img, Math.round(px - d.w / 2), Math.round(py - d.h + d.foot));
+  if (sc !== 1 || lift || p.tilt) {
+    ctx.save(); ctx.translate(px, py - lift);
+    if (p.tilt) ctx.rotate(p.tilt * 0.11);
+    ctx.scale(sc, sc);
+    ctx.drawImage(d.img, Math.round(-d.w / 2), Math.round(-d.h + d.foot));
+    ctx.restore();
+  } else {
+    // 바람에 흔들리는 풀과 가지
+    const sway = small ? Math.sin(worldT * 1.6 + p.x * 0.7 + p.y * 0.4) * windAmt * 2.2 : 0;
+    ctx.drawImage(d.img, Math.round(px - d.w / 2 + sway), Math.round(py - d.h + d.foot));
+  }
   if (al < 1) ctx.globalAlpha = 1;
 }
 
@@ -455,14 +673,253 @@ function drawClouds(dt) {
   }
 }
 
+
+
+/* 빛무리는 매 프레임 그라디언트를 만들면 느려요 — 한 번 그려두고 가져다 씁니다 */
+function makeGlow(size, stops) {
+  const c = document.createElement('canvas'); c.width = c.height = size;
+  const g = c.getContext('2d');
+  const rg = g.createRadialGradient(size / 2, size / 2, 1, size / 2, size / 2, size / 2);
+  for (const [o, col] of stops) rg.addColorStop(o, col);
+  g.fillStyle = rg; g.fillRect(0, 0, size, size);
+  return c;
+}
+const GLOW_FIRE = makeGlow(128, [[0, 'rgba(255,186,96,1)'], [0.42, 'rgba(238,132,54,.45)'], [1, 'rgba(238,132,54,0)']]);
+const GLOW_MIST = makeGlow(128, [[0, 'rgba(126,176,210,1)'], [1, 'rgba(126,176,210,0)']]);
+const GLOW_SPK  = makeGlow(32,  [[0, 'rgba(255,252,226,1)'], [1, 'rgba(255,252,226,0)']]);
+const GLOW_SPKN = makeGlow(32,  [[0, 'rgba(190,220,255,1)'], [1, 'rgba(190,220,255,0)']]);
+
+/* ================= 시간 · 날씨 · 빛 ================= */
+let worldT = 0, windAmt = 0.45, dayT = 0.34;
+const DAY_LEN = 420;                     // 하루 7분
+const urlp = new URLSearchParams(location.search);
+const FIXED = { dawn: 0.20, morning: 0.30, noon: 0.50, dusk: 0.76, night: 0.92 }[urlp.get('time')];
+if (FIXED != null) dayT = FIXED;
+const DAY_RUN = FIXED == null;
+
+/* [시각, R, G, B, 덮는 세기, 밤 정도] */
+const SKY = [
+  [0.00,  16,  24,  60, 0.60, 1.00],
+  [0.15,  44,  42,  88, 0.46, 0.88],
+  [0.23, 232, 146, 122, 0.28, 0.38],
+  [0.32, 255, 226, 172, 0.13, 0.06],
+  [0.50, 255, 248, 218, 0.05, 0.00],
+  [0.64, 255, 224, 166, 0.12, 0.05],
+  [0.75, 246, 138,  84, 0.30, 0.36],
+  [0.85,  70,  56, 112, 0.48, 0.88],
+  [1.00,  16,  24,  60, 0.60, 1.00],
+];
+function skyAt(t) {
+  for (let i = 1; i < SKY.length; i++) {
+    if (t <= SKY[i][0]) {
+      const a = SKY[i - 1], b = SKY[i];
+      const k = (t - a[0]) / (b[0] - a[0] || 1);
+      return [1, 2, 3, 4, 5].map(j => a[j] + (b[j] - a[j]) * k);
+    }
+  }
+  return SKY[0].slice(1);
+}
+let sky = skyAt(dayT);
+const nightAmt = () => sky[4];
+
+/* 날씨 — 맑음 → 바람 → 비 */
+let weather = 'clear', wTimer = 40 + Math.random() * 50, rainAmt = 0;
+const drops = Array.from({ length: 260 }, () => ({
+  x: Math.random(), y: Math.random(), s: 0.6 + Math.random() * 0.8,
+}));
+function stepWeather(dt) {
+  wTimer -= dt;
+  if (wTimer <= 0) {
+    const r = Math.random();
+    weather = r < 0.5 ? 'clear' : r < 0.82 ? 'windy' : 'rain';
+    wTimer = weather === 'rain' ? 30 + Math.random() * 30 : 50 + Math.random() * 60;
+  }
+  const targetRain = weather === 'rain' ? 1 : 0;
+  rainAmt += (targetRain - rainAmt) * Math.min(1, dt * 0.35);
+  const targetWind = weather === 'windy' ? 1.5 : weather === 'rain' ? 1.2 : 0.45;
+  windAmt += (targetWind - windAmt) * Math.min(1, dt * 0.5);
+}
+function drawRain() {
+  if (rainAmt < 0.02) return;
+  const W = SW / zoom, H = SH / zoom;
+  ctx.strokeStyle = `rgba(190,214,238,${0.30 * rainAmt})`; ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (const d of drops) {
+    const x = ((d.x + worldT * 0.10 * d.s) % 1) * W;
+    const y = ((d.y + worldT * 0.95 * d.s) % 1) * H;
+    ctx.moveTo(x, y); ctx.lineTo(x - 4 * d.s, y + 13 * d.s);
+  }
+  ctx.stroke();
+  ctx.fillStyle = `rgba(26,34,48,${0.20 * rainAmt})`;
+  ctx.fillRect(0, 0, W, H);
+}
+
+/* 떠다니는 빛가루 */
+const MOTES = Array.from({ length: 56 }, (_, i) => ({
+  x: hash2(i, 1, 5) * 3000, y: hash2(i, 2, 7) * 2200,
+  r: 0.8 + hash2(i, 3, 9) * 1.7, sp: 0.3 + hash2(i, 4, 11) * 0.8,
+  ph: hash2(i, 5, 13) * 6.283,
+}));
+function drawMotes() {
+  const W = SW / zoom, H = SH / zoom, n = nightAmt();
+  ctx.fillStyle = n > 0.4 ? 'rgb(186,236,255)' : 'rgb(255,240,190)';
+  const base = n > 0.4 ? 0.30 + n * 0.45 : 0.34;
+  for (const m of MOTES) {
+    const px = ((m.x + worldT * 7 * m.sp - camX) % 3000 + 3000) % 3000 - 200;
+    const py = ((m.y - worldT * 4 * m.sp - camY) % 2200 + 2200) % 2200 - 200;
+    if (px < -30 || px > W + 30 || py < -30 || py > H + 30) continue;
+    const tw = 0.45 + 0.55 * Math.sin(worldT * 1.6 + m.ph);
+    ctx.globalAlpha = base * tw;
+    const r = m.r * (1 + n * 0.5);
+    ctx.beginPath(); ctx.arc(px + Math.sin(worldT * 0.8 + m.ph) * 9, py, r, 0, 7); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+/* 신전에서 쏟아지는 빛줄기 */
+const RAY_IMG = (() => {
+  const w = 160, h = 560;
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const g = c.getContext('2d');
+  const lg = g.createLinearGradient(0, 0, 0, h);
+  lg.addColorStop(0, 'rgba(255,244,206,.85)');
+  lg.addColorStop(1, 'rgba(255,244,206,0)');
+  g.fillStyle = lg;
+  g.beginPath(); g.moveTo(w / 2 - 16, 0); g.lineTo(w / 2 + 16, 0);
+  g.lineTo(w / 2 + 64, h); g.lineTo(w / 2 - 64, h); g.closePath(); g.fill();
+  return c;
+})();
+function drawGodRays() {
+  const strength = (1 - nightAmt()) * (0.55 + 0.45 * Math.sin(worldT * 0.3));
+  if (strength < 0.06) return;
+  const sx = isoX(29, 21.5) - camX, sy = isoY(29, 21.5) - camY - 160;
+  if (sx < -600 || sx > SW / zoom + 600) return;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < 5; i++) {
+    const a = -0.40 + i * 0.20 + Math.sin(worldT * 0.25 + i) * 0.035;
+    const len = 520 + Math.sin(worldT * 0.4 + i * 2) * 60;
+    ctx.globalAlpha = 0.17 * strength;
+    ctx.save(); ctx.translate(sx, sy); ctx.rotate(-a);
+    ctx.drawImage(RAY_IMG, -80, 0, 160, len);
+    ctx.restore();
+  }
+  ctx.globalAlpha = 1; ctx.restore();
+}
+
+/* 불빛 — 밤이 될수록 강해져요 */
+const FIRES = [];
+function collectFires() {
+  for (const p of MAP.props)
+    if (p.kind === 'brazier' || p.kind === 'altar') FIRES.push({ x: p.x, y: p.y, r: p.kind === 'altar' ? 140 : 110 });
+}
+function drawGlows() {
+  const k = 0.22 + nightAmt() * 0.78;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  for (const f of FIRES) {
+    const px = isoX(f.x, f.y) - camX, py = isoY(f.x, f.y) - camY - 40;
+    if (px < -200 || px > SW / zoom + 200 || py < -200 || py > SH / zoom + 200) continue;
+    const fl = 1 + Math.sin(worldT * 7 + f.x * 3) * 0.08 + Math.sin(worldT * 11 + f.y) * 0.05;
+    const r = f.r * fl;
+    ctx.globalAlpha = 0.34 * k;
+    ctx.drawImage(GLOW_FIRE, px - r, py - r, r * 2, r * 2);
+  }
+  ctx.globalAlpha = 1; ctx.restore();
+}
+
+/* 광장 한가운데 희미하게 빛나는 신의 문양 */
+function drawSigil() {
+  const px = isoX(30, 31) - camX, py = isoY(30, 31) - camY;
+  if (px < -300 || px > SW / zoom + 300 || py < -200 || py > SH / zoom + 200) return;
+  const n = nightAmt(), k = 0.20 + n * 0.80;
+  ctx.save(); ctx.translate(px, py); ctx.scale(1, 0.5);
+  ctx.globalCompositeOperation = 'lighter';
+  for (let ring = 0; ring < 2; ring++) {
+    const rr = 86 + ring * 34;
+    const pulse = 0.55 + 0.45 * Math.sin(worldT * 0.9 - ring);
+    ctx.strokeStyle = `rgba(150,214,255,${0.16 * k * pulse})`;
+    ctx.lineWidth = ring ? 2 : 3;
+    ctx.beginPath(); ctx.arc(0, 0, rr, 0, 7); ctx.stroke();
+    ctx.save(); ctx.rotate(worldT * (ring ? -0.16 : 0.11));
+    ctx.strokeStyle = `rgba(190,232,255,${0.13 * k * pulse})`;
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const a = i / 6 * 6.283;
+      ctx.moveTo(Math.cos(a) * rr * 0.55, Math.sin(a) * rr * 0.55);
+      ctx.lineTo(Math.cos(a + 2.094) * rr * 0.55, Math.sin(a + 2.094) * rr * 0.55);
+    }
+    ctx.stroke(); ctx.restore();
+  }
+  ctx.restore();
+}
+
+/* 숲 깊은 곳의 푸른 안개 */
+function drawMist() {
+  const k = 0.35 + nightAmt() * 0.65;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < 3; i++) {
+    const bx = 1200 + i * 1400, by = 900 + i * 980;
+    const px = ((bx + worldT * 6 - camX) % 3400 + 3400) % 3400 - 400;
+    const py = ((by + worldT * 3 - camY) % 2600 + 2600) % 2600 - 300;
+    if (px < -500 || px > SW / zoom + 500 || py < -300 || py > SH / zoom + 300) continue;
+    const r = 260 + i * 40;
+    ctx.globalAlpha = 0.09 * k;
+    ctx.drawImage(GLOW_MIST, px - r * 1.8, py - r * 0.62, r * 3.6, r * 1.24);
+  }
+  ctx.globalAlpha = 1; ctx.restore();
+}
+
+/* 바다 윤슬 — 화면에 보이는 물만 */
+let seaOnScreen = false;
+function drawSeaSparkle() {
+  if (!seaOnScreen) return;
+  const W = SW / zoom, H = SH / zoom, n = nightAmt();
+  const img = n > 0.5 ? GLOW_SPKN : GLOW_SPK;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < 64; i++) {
+    const wx = ((hash2(i, 1, 77) * 3000 + Math.sin(worldT * 0.6 + i) * 26 - camX) % 3000 + 3000) % 3000 - 300;
+    const wy = ((hash2(i, 2, 79) * 2400 + Math.sin(worldT * 0.4 + i * 2) * 10 - camY) % 2400 + 2400) % 2400 - 300;
+    if (wx < -20 || wx > W + 20 || wy < -20 || wy > H + 20) continue;
+    const [tx, ty] = screenToTile(wx + camX, wy + camY);
+    if (seaMask(tx, ty) < 0.5) continue;
+    const tw = Math.max(0, Math.sin(worldT * 2.2 + i * 1.7));
+    if (tw < 0.05) continue;
+    const r = 7 * tw + 2;
+    ctx.globalAlpha = 0.55 * tw;
+    ctx.drawImage(img, wx - r, wy - r * 0.42, r * 2, r * 0.84);
+  }
+  ctx.globalAlpha = 1; ctx.restore();
+}
+
+/* 하루의 색 ─ 마지막에 전체를 덮어요 */
+function drawGrade() {
+  const [r, g, b, a] = sky;
+  const W = SW / zoom, H = SH / zoom;
+  const n = nightAmt();
+  if (a > 0.035) {
+    ctx.fillStyle = `rgba(${r | 0},${g | 0},${b | 0},${Math.min(0.74, a * (n > 0.4 ? 0.9 : 1.3))})`;
+    ctx.fillRect(0, 0, W, H);
+  }
+  if (n > 0.04) {                       // 밤은 한 겹 더 어둡게 — 그래야 불빛이 살아요
+    ctx.fillStyle = `rgba(8,12,30,${n * 0.42})`;
+    ctx.fillRect(0, 0, W, H);
+  }
+}
+
 let clickFx = null;
 function draw() {
   ctx.setTransform(DPR * zoom, 0, 0, DPR * zoom, 0, 0);
   ctx.imageSmoothingEnabled = false;
   ctx.fillStyle = '#6f8449'; ctx.fillRect(0, 0, SW / zoom, SH / zoom);
-  if (groundDirty || Math.abs(camX - gOffX - 400) > 240 || Math.abs(camY - gOffY - 400) > 240) paintGround();
+  if (groundDirty || Math.abs(camX - gOffX - 400) > 240 || Math.abs(camY - gOffY - 400) > 240) {
+    paintGround();
+    const [cx, cy] = screenToTile(camX + SW / zoom / 2, camY + SH / zoom / 2);
+    seaOnScreen = seaMask(cx - 14, cy) > 0 || seaMask(cx, cy) > 0 || seaMask(cx - 7, cy + 7) > 0;
+  }
   ctx.drawImage(gcv, gOffX - camX, gOffY - camY);
+  drawSeaSparkle();
   drawClouds(lastDt);
+  drawMist();
+  drawSigil();
 
   if (clickFx) {
     const px = isoX(clickFx.x, clickFx.y) - camX, py = isoY(clickFx.x, clickFx.y) - camY, k = clickFx.t / 0.5;
@@ -473,8 +930,15 @@ function draw() {
   MAP.scatter.forEach(p => items.push({ d: p.x + p.y - 0.2, f: () => drawProp(p, true) }));
   MAP.props.forEach(p => items.push({ d: p.x + p.y, f: () => drawProp(p, false) }));
   actors.forEach(a => items.push({ d: a.x + a.y + 0.35, f: () => drawActor(a) }));
+  npcs.forEach(a => items.push({ d: a.x + a.y + 0.3, f: () => drawActor(a) }));
   items.sort((a, b) => a.d - b.d).forEach(it => it.f());
   drawDust(lastDt);
+  drawGlows();
+  drawGodRays();
+  drawMotes();
+  drawRain();
+  drawGrade();
+  drawSpeech();
 
   const g = ctx.createRadialGradient(SW / zoom / 2, SH / zoom / 2, Math.min(SW, SH) / zoom * 0.36,
                                      SW / zoom / 2, SH / zoom / 2, Math.max(SW, SH) / zoom * 0.74);
@@ -492,13 +956,20 @@ cv.addEventListener('pointerdown', e => {
 });
 addEventListener('keydown', e => { if (e.key === ' ') { e.preventDefault(); player.atk = 0.45; } });
 const atkBtn = $('bAtk'); if (atkBtn) atkBtn.addEventListener('pointerdown', e => { e.preventDefault(); player.atk = 0.45; });
+const talkBtn = $('bTalk'); if (talkBtn) talkBtn.addEventListener('pointerdown', e => { e.preventDefault(); tryTalk(); });
+addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === 'f') { e.preventDefault(); tryTalk(); } });
 
 /* ---------------- 루프 ---------------- */
 let last = performance.now(), lastDt = 0.016;
 function loop(now) {
   requestAnimationFrame(loop);
   const dt = Math.min(0.05, (now - last) / 1000); last = now; lastDt = dt;
+  worldT += dt;
+  if (DAY_RUN) dayT = (dayT + dt / DAY_LEN) % 1;
+  sky = skyAt(dayT);
+  stepWeather(dt);
   actors.forEach(a => stepActor(a, dt));
+  npcs.forEach(a => stepNpc(a, dt));
   if (clickFx) { clickFx.t += dt; if (clickFx.t > 0.5) clickFx = null; }
   const tx = isoX(player.x, player.y) - SW / zoom / 2, ty = isoY(player.x, player.y) - SH / zoom / 2;
   camX += (tx - camX) * 0.1; camY += (ty - camY) * 0.1;
@@ -513,8 +984,10 @@ Promise.all([
 ]).then(([cm, pm]) => {
   Object.entries(cm.chars).forEach(([k, i]) => imgLoad(`images/sprites/${k}.png`, SPR, k, i));
   Object.entries(pm).forEach(([k, i]) => imgLoad(`images/props/${k}.png`, PROP, k, i));
+  collectFires();
   requestAnimationFrame(loop);
 }).catch(() => { const L = $('loading'); if (L) L.textContent = '그림을 불러오지 못했어요'; });
 
-window.__gs = { player, actors, MAP, findPath, SPR, PROP, groundAt, state: () => ({ loaded, total }) };
+window.__gs = { player, actors, npcs, MAP, findPath, SPR, PROP, groundAt, seaMask,
+  state: () => ({ loaded, total }), time: () => ({ dayT, weather, rainAmt, night: nightAmt() }) };
 })();
