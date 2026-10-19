@@ -1,73 +1,62 @@
-"""구운 프레임을 거상풍으로 후처리하고 게임용 스프라이트 시트 + 메타로 묶습니다."""
-from PIL import Image, ImageFilter
-import json, os, sys
+"""구운 캐릭터 프레임을 거상풍으로 후처리하고 스프라이트 시트로 묶습니다."""
+from PIL import Image, ImageFilter, ImageEnhance
+import json, os
 
-RAW='/home/claude/bake2/raw'; RAWP='/home/claude/bake2/raw_props'
-DST='/home/claude/ian-odysseia/images/sprites'; DSTP='/home/claude/ian-odysseia/images/props'
-W,H,SS=108,144,2
-ANIM_ORDER=['idle','walk','attack','hurt','down']
-DIRS=8
+RAW = '/home/claude/bake4/raw'
+DST = '/home/claude/ian-odysseia/images/sprites'
+W, H = 108, 144
+LEVELS = 11
+ANIM_ORDER = ['idle', 'walk', 'attack', 'hurt', 'down']
+DIRS = 8
 
-def posterize(im, levels=6):
-    px=im.load()
-    q=lambda v: min(255,int(round(v/255*(levels-1))/(levels-1)*255))
-    for y in range(im.height):
-        for x in range(im.width):
-            r,g,b,a=px[x,y]
-            if a<8: continue
-            px[x,y]=(q(r),q(g),q(b),255 if a>110 else 0)
-    return im
+LUT = [min(255, int(round(v / 255 * (LEVELS - 1)) / (LEVELS - 1) * 255)) for v in range(256)]
 
-def outline(im, col=(24,16,30,255)):
-    a=im.split()[3]
-    inner=Image.eval(a, lambda v:255 if v>110 else 0)
-    grown=inner.filter(ImageFilter.MaxFilter(3))
-    ring=Image.eval(grown, lambda v:255 if v>128 else 0)
-    ring=Image.composite(Image.new('L',im.size,0), ring, inner)
-    out=Image.new('RGBA',im.size,(0,0,0,0))
-    out.paste(Image.new('RGBA',im.size,col),(0,0),ring)
+def posterize(im):
+    r, g, b, a = im.split()
+    r = r.point(LUT); g = g.point(LUT); b = b.point(LUT)
+    a = a.point(lambda v: 255 if v > 112 else 0)
+    return Image.merge('RGBA', (r, g, b, a))
+
+def outline(im, col=(30, 21, 34, 235)):
+    a = im.split()[3]
+    inner = a.point(lambda v: 255 if v > 112 else 0)
+    ring = inner.filter(ImageFilter.MaxFilter(3)).point(lambda v: 255 if v > 128 else 0)
+    ring = Image.composite(Image.new('L', im.size, 0), ring, inner)
+    out = Image.new('RGBA', im.size, (0, 0, 0, 0))
+    out.paste(Image.new('RGBA', im.size, col), (0, 0), ring)
     out.alpha_composite(im)
     return out
 
-def process(path, w, h):
-    im=Image.open(path).convert('RGBA').resize((w,h), Image.LANCZOS)
-    return outline(posterize(im,6))
+def process(path):
+    im = Image.open(path).convert('RGBA').resize((W, H), Image.LANCZOS)
+    rgb = Image.merge('RGB', im.split()[:3])
+    rgb = ImageEnhance.Color(rgb).enhance(1.12)        # 살짝 쨍하게
+    rgb = ImageEnhance.Contrast(rgb).enhance(1.06)
+    im = Image.merge('RGBA', (*rgb.split(), im.split()[3]))
+    return outline(posterize(im))
 
-os.makedirs(DST, exist_ok=True); os.makedirs(DSTP, exist_ok=True)
-meta={'chars':{}, 'props':{}}
+os.makedirs(DST, exist_ok=True)
+meta = {'chars': {}, 'props': {}}
+raw_meta = json.load(open(f'{RAW}/meta.json'))
 
-raw_meta=json.load(open(f'{RAW}/meta.json'))
 for key, anims in raw_meta.items():
-    rows=[]; col0={}; c=0
-    order=[a for a in ANIM_ORDER if a in anims]
-    maxf=max(anims[a] for a in order)
+    order = [a for a in ANIM_ORDER if a in anims]
+    col0 = {}; c = 0
     for a in order:
-        col0[a]=c; c+=anims[a]
-    sheet=Image.new('RGBA',(W*c, H*DIRS*len(order)),(0,0,0,0))
-    info={}
-    for ai,a in enumerate(order):
-        info[a]={'row0':ai*DIRS, 'col0':col0[a], 'frames':anims[a]}
+        col0[a] = c; c += anims[a]
+    sheet = Image.new('RGBA', (W * c, H * DIRS * len(order)), (0, 0, 0, 0))
+    info = {}
+    for ai, a in enumerate(order):
+        info[a] = {'row0': ai * DIRS, 'col0': col0[a], 'frames': anims[a]}
         for d in range(DIRS):
             for f in range(anims[a]):
-                p=f'{RAW}/{key}_{a}_d{d}_f{f:02d}.png'
+                p = f'{RAW}/{key}_{a}_d{d}_f{f:02d}.png'
                 if not os.path.exists(p): continue
-                sheet.paste(process(p,W,H), ((col0[a]+f)*W, (ai*DIRS+d)*H))
+                sheet.paste(process(p), ((col0[a] + f) * W, (ai * DIRS + d) * H))
     sheet.save(f'{DST}/{key}.png')
-    meta['chars'][key]={'w':W,'h':H,'anims':info}
+    meta['chars'][key] = {'w': W, 'h': H, 'anims': info}
     print('packed', key, sheet.size, flush=True)
 
-# 소품
-PROP_FOOT={'hanok_shop':34,'hanok_house':30,'pine':16,'rock':10,'lantern':12,'stall':18}
-if os.path.isdir(RAWP):
-    for f in sorted(os.listdir(RAWP)):
-        if not f.endswith('.png'): continue
-        key=f[:-4]
-        im=Image.open(f'{RAWP}/{f}').convert('RGBA')
-        im=im.resize((im.width//SS, im.height//SS), Image.LANCZOS)
-        im=outline(posterize(im,6))
-        im.save(f'{DSTP}/{key}.png')
-        meta['props'][key]={'w':im.width,'h':im.height,'foot':PROP_FOOT.get(key,12)}
-        print('packed prop', key, im.size, flush=True)
-
-json.dump(meta, open(f'{DST}/meta.json','w'), ensure_ascii=False)
-print('PACK DONE', {k:len(v) for k,v in meta.items()})
+# 기존 소품 메타는 images/props/meta.json 가 따로 들고 있어요
+json.dump(meta, open(f'{DST}/meta.json', 'w'), ensure_ascii=False)
+print('PACK DONE', list(meta['chars']))
